@@ -115,7 +115,7 @@ const HotelDetailPage = () => {
         }}
       >
         <Box style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1, minWidth: 0 }}>
-          <Text style={{ color: "#2C3E50", fontSize: 12 }} numberOfLines={1}>
+          <Text style={{ color: "#2C3E50", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             📍 {currentHotel.addr}
           </Text>
           <Text style={{ color: "#1D7FA3", fontSize: 12, fontWeight: 600 }}>
