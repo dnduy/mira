@@ -4,6 +4,7 @@ import { useParams, useNavigate as useRouterNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import { HotelDetailSkeleton } from "../../components/LoadingSkeleton";
 import { handleShareHotel } from "../../utils/share";
+import BackBar from "../../components/BackBar";
 
 const AMENITIES = [
   "📶 Wifi miễn phí",
@@ -41,6 +42,7 @@ const HotelDetailPage = () => {
 
   return (
     <Page>
+      <BackBar />
       {/* Hero Photo */}
       <Box style={{ position: "relative", height: 240, overflow: "hidden" }}>
         {currentHotel.thumbnail ? (
@@ -88,19 +90,6 @@ const HotelDetailPage = () => {
             {currentHotel.name}
           </Text>
         </Box>
-        {/* Back button */}
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            position: "absolute", top: 12, left: 12,
-            background: "rgba(0,0,0,0.45)",
-            border: "none", borderRadius: 20,
-            color: "#fff", fontSize: 13,
-            padding: "6px 12px", cursor: "pointer",
-          }}
-        >
-          ← Quay lại
-        </button>
       </Box>
 
       {/* Location strip */}

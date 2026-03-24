@@ -3,6 +3,7 @@ import { Page, Box, Text, Button } from "zmp-ui";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import { handleShareRoom } from "../../utils/share";
+import BackBar from "../../components/BackBar";
 
 const RoomDetailPage = () => {
   const { hotelId, roomId } = useParams();
@@ -38,6 +39,7 @@ const RoomDetailPage = () => {
 
   return (
     <Page>
+      <BackBar />
       {/* Hero */}
       <Box style={{ position: "relative", height: 260, overflow: "hidden" }}>
         <img
@@ -74,19 +76,6 @@ const RoomDetailPage = () => {
             {room.name}
           </Text>
         </Box>
-        {/* Back */}
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            position: "absolute", top: 12, left: 12,
-            background: "rgba(0,0,0,0.45)",
-            border: "none", borderRadius: 20,
-            color: "#fff", fontSize: 13,
-            padding: "6px 12px", cursor: "pointer",
-          }}
-        >
-          ← Quay lại
-        </button>
       </Box>
 
       {/* Gallery strip */}

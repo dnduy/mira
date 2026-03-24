@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import HotelCard from "../../components/HotelCard";
 import LoadingSkeleton from "../../components/LoadingSkeleton";
+import BackBar from "../../components/BackBar";
 
 const FILTERS = ["Tất cả", "Gần biển nhất", "3 Sao", "Homestay", "Giá tốt"];
 
@@ -37,7 +38,8 @@ const HotelsPage = () => {
 
   return (
     <Page onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-      {/* Header */}
+      <BackBar title="7 Khách sạn Mira" to="/" />
+      {/* Header */}}
       <Box
         style={{
           background: "linear-gradient(135deg, #1A2535, #1D4E6B)",

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Page, Box, Text } from "zmp-ui";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
+import BackBar from "../../components/BackBar";
 
 const PostDetailPage = () => {
   const { id } = useParams();
@@ -14,22 +15,7 @@ const PostDetailPage = () => {
 
   return (
     <Page>
-      {/* Back bar */}
-      <Box
-        style={{
-          padding: "12px 16px",
-          borderBottom: "0.5px solid #f0f0f0",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          cursor: "pointer",
-          background: "#fff",
-        }}
-        onClick={() => navigate(-1)}
-      >
-        <Text style={{ fontSize: 20, color: "#1D7FA3", lineHeight: 1 }}>‹</Text>
-        <Text style={{ fontSize: 14, color: "#1D7FA3", fontWeight: 500 }}>Quay lại</Text>
-      </Box>
+      <BackBar />
 
       {(postLoading || !currentPost || String(currentPost.id) !== String(id)) ? (
         <Box style={{ padding: 32, textAlign: "center" }}>

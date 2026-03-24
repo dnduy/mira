@@ -3,6 +3,7 @@ import { Page, Box, Text, Button, Input, Select, Picker, useSnackbar } from "zmp
 import { handleCall, handleOpenChat } from "../../utils/contact";
 import { handleDeposit, DEPOSIT_AMOUNT } from "../../utils/payment";
 import { askOAInteract, askNotificationPermission } from "../../utils/notification";
+import BackBar from "../../components/BackBar";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import { wpApi } from "../../services/api";
@@ -123,7 +124,8 @@ const BookingPage = () => {
       {showReview && (
         <ReviewModal onClose={() => { setShowReview(false); navigate("/"); }} />
       )}
-      {/* Header */}
+      <BackBar title="Đặt phòng" to="/" />
+      {/* Header */}}
       <Box
         style={{
           background: "linear-gradient(135deg, #1A2535, #1D4E6B)",

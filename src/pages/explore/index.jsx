@@ -3,6 +3,7 @@ import { Page, Box, Text, Button } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import LoadingSkeleton from "../../components/LoadingSkeleton";
+import BackBar from "../../components/BackBar";
 
 const ExplorePage = () => {
   const navigate = useNavigate();
@@ -71,20 +72,14 @@ const ExplorePage = () => {
 
   return (
     <Page>
+      <BackBar title="Khám phá Quy Nhơn" to="/" />
       {/* Header */}
       <Box
         style={{
           background: "linear-gradient(135deg, #0F6E56, #1D9E75)",
-          padding: "20px 16px 28px",
+          padding: "16px 16px 24px",
         }}
       >
-        <Box
-          style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, cursor: "pointer" }}
-          onClick={() => navigate("/")}
-        >
-          <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 13 }}>←</Text>
-          <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 12 }}>Trang chủ</Text>
-        </Box>
         <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, marginBottom: 4 }}>
           Cẩm nang du lịch
         </Text>
