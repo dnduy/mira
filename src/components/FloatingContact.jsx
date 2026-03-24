@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Box, Text } from "zmp-ui";
-import { handleCall } from "../utils/contact";
+import { handleCall, handleOpenChat } from "../utils/contact";
 
 const PHONE = "02563822222";
-const ZALO_PHONE = "02563822222";
 const FB_PAGE = "https://m.me/mira.hotel.quynhon";
 
 // SVG icons
@@ -38,7 +37,7 @@ const buttons = [
     gradient: "linear-gradient(135deg, #3B82F6, #1D4ED8)",
     shadow: "rgba(59,130,246,0.45)",
     Icon: ZaloIcon,
-    action: () => handleCall(ZALO_PHONE),
+    action: () => handleOpenChat(),
   },
   {
     label: "Messenger",

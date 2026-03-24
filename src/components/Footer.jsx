@@ -1,11 +1,10 @@
 import React from "react";
 import { Box, Text } from "zmp-ui";
-import { handleCall } from "../utils/contact";
+import { handleCall, handleOpenChat } from "../utils/contact";
 
-// TODO: cập nhật số điện thoại thực tế và ID Zalo OA
+// TODO: cập nhật số điện thoại thực tế
 const PHONE = "02563822222";
 const PHONE_DISPLAY = "0256 382 2222";
-const ZALO_PHONE = "02563822222";
 const FB_PAGE = "https://www.facebook.com/miraquynhon";
 
 const HOTELS = [
@@ -79,7 +78,7 @@ const Footer = () => (
           emoji="💬"
           label="Chat Zalo"
           bg="#0068FF"
-          onClick={() => handleCall(ZALO_PHONE)}
+          onClick={() => handleOpenChat()}
         />
         <ContactBtn
           emoji="👍"

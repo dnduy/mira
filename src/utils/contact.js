@@ -1,8 +1,11 @@
 /**
  * Tiện ích xử lý liên hệ trong Zalo Mini App.
- * Dùng ZMP SDK thay vì tel: link để đảm bảo hoạt động đúng trong môi trường Zalo.
+ * Dùng ZMP SDK thay vì tel: link / zalo.me link để đảm bảo hoạt động đúng trong Zalo.
  */
-import { openPhone } from "zmp-sdk/apis";
+import { openPhone, openChat } from "zmp-sdk/apis";
+
+// OA ID của Mira — cấu hình trong file .env: VITE_ZALO_OA_ID=<oa_id>
+export const MIRA_OA_ID = import.meta.env.VITE_ZALO_OA_ID || "";
 
 /**
  * Gọi điện thoại qua Zalo Mini App SDK.
@@ -20,5 +23,24 @@ export async function handleCall(phoneNumber) {
     } catch {
       alert(`Vui lòng gọi số: ${phoneNumber}`);
     }
+  }
+}
+
+/**
+ * Mở cửa sổ chat với Zalo OA của Mira.
+ * Fallback: mở trang zalo.me nếu SDK thất bại hoặc chưa cấu hình OA ID.
+ * @param {string} [oaId] - OA ID, mặc định lấy từ MIRA_OA_ID (env)
+ */
+export async function handleOpenChat(oaId = MIRA_OA_ID) {
+  if (!oaId) {
+    // Chưa cấu hình OA ID — fallback về zalo.me phone
+    window.open("https://zalo.me/02563822222");
+    return;
+  }
+  try {
+    await openChat({ type: "oa", id: oaId });
+  } catch (err) {
+    // Fallback: mở zalo.me profile OA
+    window.open(`https://zalo.me/${oaId}`);
   }
 }
