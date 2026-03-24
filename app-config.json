@@ -1,6 +1,7 @@
 {
   "app": {
-    "title": "mira",
+    "title": "Mira Quy Nhơn - Khách sạn 5 sao biển, Đặt phòng nhanh",
+    "description": "Đặt phòng khách sạn Mira Quy Nhơn 5 sao view biển trực tiếp trên Zalo. Giá tốt nhất, ưu đãi flash sale, hồ bơi vô cực, nhà hàng hải sản tươi sống. Hỗ trợ Zalo Pay, nhận phòng nhanh, hoàn tiền dễ dàng. Khách sạn biển Quy Nhơn đẹp nhất.",
     "textColor": {
       "light": "black",
       "dark": "white"
