@@ -1,0 +1,36 @@
+{
+  "name": "mira-quynhon-zalo-miniapp",
+  "version": "1.0.0",
+  "description": "Zalo Mini App cho hệ thống khách sạn Mira Quy Nhơn",
+  "scripts": {
+    "start": "zmp start",
+    "build": "zmp build",
+    "deploy": "zmp deploy"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "dayjs": "^1.11.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.11.0",
+    "zmp-sdk": "^2.51.1",
+    "zmp-ui": "^1.11.13",
+    "zustand": "^4.3.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.27",
+    "tailwindcss": "^3.4.19",
+    "vite": "^5.4.21",
+    "zmp-vite-plugin": "^1.1.6"
+  },
+  "zalo": {
+    "miniapp": {
+      "appId": "YOUR_APP_ID_HERE",
+      "permissions": [
+        "scope.userInfo",
+        "scope.userPhonenumber"
+      ]
+    }
+  }
+}

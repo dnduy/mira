@@ -1,0 +1,19 @@
+{
+  "cwd": "/Users/duyduong/Documents/code/zalo mini app/miraquynhon/mira",
+  "name": "mira-quynhon-zalo-miniapp",
+  "framework": "react",
+  "cssPreProcessor": "none",
+  "includeTailwind": true,
+  "package": "zmp-ui",
+  "stateManagement": "zustand",
+  "newProject": false,
+  "template": "single-view",
+  "theming": {
+    "customColor": false,
+    "color": "#007aff",
+    "darkTheme": false,
+    "iconFonts": true,
+    "fillBars": false,
+    "useUiKits": true
+  }
+}
