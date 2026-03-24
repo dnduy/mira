@@ -547,4 +547,15 @@ export const wpApi = {
     });
     return res.data;
   },
+
+  /**
+   * Tạo signed payment order cho Zalo Pay (MAC được tính server-side)
+   * @param {{ hotelName, checkIn, name, phone }} data
+   */
+  createPaymentOrder: async (data) => {
+    const res = await axios.post(`${MIRA_API}/payment/order`, data, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return res.data;
+  },
 };

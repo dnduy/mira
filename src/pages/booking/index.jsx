@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Page, Box, Text, Button, Input, Select, Picker, useSnackbar } from "zmp-ui";
 import { handleCall, handleOpenChat } from "../../utils/contact";
+import { handleDeposit, DEPOSIT_AMOUNT } from "../../utils/payment";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import { wpApi } from "../../services/api";
@@ -24,6 +25,8 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(false);
   // Hiện popup đánh giá sau khi đặt phòng thành công
   const [showReview, setShowReview] = useState(false);
+  // Tuỳ chọn thanh toán: "request" = gửi yêu cầu, "deposit" = đặt cọc Zalo Pay
+  const [paymentMode, setPaymentMode] = useState("request");
 
   const today = dayjs().format("YYYY-MM-DD");
   const tomorrow = dayjs().add(1, "day").format("YYYY-MM-DD");
@@ -51,20 +54,49 @@ const BookingPage = () => {
   const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true);
+
+    let zalopayOrderId = null;
+    let zalopayStatus  = "none";
+
     try {
+      // ── Đặt cọc qua Zalo Pay trước khi gửi booking ──────────────────────────
+      if (paymentMode === "deposit") {
+        try {
+          const payment = await handleDeposit({
+            hotelName: bookingForm.hotelName,
+            checkIn:   bookingForm.checkIn,
+            name:      bookingForm.name,
+            phone:     bookingForm.phone,
+          });
+          zalopayOrderId = payment.orderId;
+          zalopayStatus  = payment.status;
+        } catch (payErr) {
+          // Người dùng huỷ hoặc server chưa cấu hình → hỏi có muốn gửi yêu cầu thường không
+          const fallback = window.confirm(
+            "Thanh toán Zalo Pay chưa hoàn tất.\nBạn có muốn gửi yêu cầu đặt phòng mà không cần đặt cọc không?"
+          );
+          if (!fallback) { setLoading(false); return; }
+        }
+      }
+
+      // ── Gửi booking (có hoặc không có zalopayOrderId) ────────────────────────
       await wpApi.submitBooking({
         ...bookingForm,
-        zaloUserId: user?.id || null,
-        zaloName: user?.name || null,
-        submittedAt: new Date().toISOString(),
+        zaloUserId:     user?.id || null,
+        zaloName:       user?.name || null,
+        submittedAt:    new Date().toISOString(),
+        zalopayOrderId,
+        zalopayStatus,
       });
+
       openSnackbar({
-        text: "✓ Đặt phòng thành công! Mira sẽ liên hệ bạn sớm.",
+        text: zalopayOrderId
+          ? `✓ Đặt cọc thành công! Mira xác nhận đặt phòng cho bạn.`
+          : "✓ Đặt phòng thành công! Mira sẽ liên hệ bạn sớm.",
         type: "success",
         duration: 4000,
       });
       resetBookingForm();
-      // Hiện popup kêu gọi đánh giá sau 1.5s để snackbar hiển trước
       setTimeout(() => setShowReview(true), 1500);
     } catch (err) {
       openSnackbar({
@@ -203,6 +235,48 @@ const BookingPage = () => {
           />
         </Box>
 
+        {/* Chọn hình thức thanh toán */}
+        <Box style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <Text style={{ fontSize: 13, fontWeight: 600, color: "#444", marginBottom: 2 }}>
+            Hình thức xác nhận
+          </Text>
+          {[
+            { value: "request", label: "Gửi yêu cầu (miễn phí)", sub: "Nhân viên liên hệ xác nhận trong 30 phút" },
+            { value: "deposit", label: `Đặt cọc ${DEPOSIT_AMOUNT.toLocaleString("vi-VN")}đ qua Zalo Pay`, sub: "Giữ phòng ngay, hoàn tiền nếu huỷ trước 24h" },
+          ].map(({ value, label, sub }) => (
+            <Box
+              key={value}
+              onClick={() => setPaymentMode(value)}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 10,
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: `1.5px solid ${paymentMode === value ? "#C9A84C" : "#e0e0e0"}`,
+                background: paymentMode === value ? "#FFF8EC" : "#fafafa",
+                cursor: "pointer",
+              }}
+            >
+              <Box
+                style={{
+                  width: 18,
+                  height: 18,
+                  borderRadius: "50%",
+                  border: `2px solid ${paymentMode === value ? "#C9A84C" : "#ccc"}`,
+                  background: paymentMode === value ? "#C9A84C" : "transparent",
+                  flexShrink: 0,
+                  marginTop: 2,
+                }}
+              />
+              <Box>
+                <Text style={{ fontSize: 13, fontWeight: 600, color: "#1A2535" }}>{label}</Text>
+                <Text style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{sub}</Text>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+
         {/* Submit */}
         <Button
           loading={loading}
@@ -218,7 +292,11 @@ const BookingPage = () => {
           }}
           onClick={handleSubmit}
         >
-          {loading ? "Đang gửi..." : "Gửi yêu cầu đặt phòng"}
+          {loading
+            ? (paymentMode === "deposit" ? "Đang mở Zalo Pay..." : "Đang gửi...")
+            : (paymentMode === "deposit"
+                ? `Đặt cọc ${DEPOSIT_AMOUNT.toLocaleString("vi-VN")}đ`
+                : "Gửi yêu cầu đặt phòng")}
         </Button>
 
         {/* Liên hệ trực tiếp */}

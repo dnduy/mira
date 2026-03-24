@@ -18,6 +18,13 @@ define( 'MIRA_FROM_NAME',     'Mira Quy Nhon Hotel' );
 define( 'MIRA_ZALO_OA_TOKEN', defined('ZALO_OA_ACCESS_TOKEN') ? ZALO_OA_ACCESS_TOKEN : 'YOUR_OA_ACCESS_TOKEN' );
 define( 'MIRA_ZALO_OA_ID',    'YOUR_OA_ID' );     // OA ID lấy từ Zalo for Business
 define( 'MIRA_ZALO_TEMPLATE_ID', 'YOUR_TEMPLATE_ID' ); // Template ZNS hoặc ZNS Transactional
+
+// Zalo Pay Mini App – lấy tại: https://developers.zalo.me/app/<APP_ID>/setting
+// key2 dùng để tạo MAC signature (KHÔNG để client-side)
+define( 'MIRA_ZALO_APP_ID',   defined('ZALO_APP_ID')   ? ZALO_APP_ID   : 'YOUR_ZALO_APP_ID' );
+define( 'MIRA_ZALO_APP_KEY2', defined('ZALO_APP_KEY2') ? ZALO_APP_KEY2 : 'YOUR_ZALO_KEY2' );
+// Tiền đặt cọc mặc định (VND) – chỉnh theo giá phòng thấp nhất
+define( 'MIRA_DEPOSIT_AMOUNT', 200000 );
 // ─────────────────────────────────────────────────────────────────────────────
 
 class Mira_Booking_API {
@@ -34,6 +41,19 @@ class Mira_Booking_API {
             'args'                => $this->get_booking_args(),
         ]);
 
+        // Tạo signed payment order (MAC server-side)
+        register_rest_route( 'mira/v1', '/payment/order', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'handle_create_payment_order' ],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'hotelName' => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+                'checkIn'   => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+                'name'      => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+                'phone'     => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+            ],
+        ]);
+
         // Health check
         register_rest_route( 'mira/v1', '/ping', [
             'methods'             => 'GET',
@@ -44,19 +64,64 @@ class Mira_Booking_API {
 
     private function get_booking_args() {
         return [
-            'hotelId'     => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
-            'hotelName'   => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
-            'checkIn'     => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
-            'checkOut'    => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
-            'adults'      => [ 'required' => false, 'default' => 2,    'sanitize_callback' => 'absint' ],
-            'children'    => [ 'required' => false, 'default' => 0,    'sanitize_callback' => 'absint' ],
-            'name'        => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
-            'phone'       => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
-            'note'        => [ 'required' => false, 'default' => '',   'sanitize_callback' => 'sanitize_textarea_field' ],
-            'zaloUserId'  => [ 'required' => false, 'sanitize_callback' => 'sanitize_text_field' ],
-            'zaloName'    => [ 'required' => false, 'sanitize_callback' => 'sanitize_text_field' ],
-            'submittedAt' => [ 'required' => false, 'sanitize_callback' => 'sanitize_text_field' ],
+            'hotelId'          => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+            'hotelName'        => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+            'checkIn'          => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+            'checkOut'         => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+            'adults'           => [ 'required' => false, 'default' => 2,    'sanitize_callback' => 'absint' ],
+            'children'         => [ 'required' => false, 'default' => 0,    'sanitize_callback' => 'absint' ],
+            'name'             => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+            'phone'            => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+            'note'             => [ 'required' => false, 'default' => '',   'sanitize_callback' => 'sanitize_textarea_field' ],
+            'zaloUserId'       => [ 'required' => false, 'sanitize_callback' => 'sanitize_text_field' ],
+            'zaloName'         => [ 'required' => false, 'sanitize_callback' => 'sanitize_text_field' ],
+            'submittedAt'      => [ 'required' => false, 'sanitize_callback' => 'sanitize_text_field' ],
+            'zalopayOrderId'   => [ 'required' => false, 'sanitize_callback' => 'sanitize_text_field' ],
+            'zalopayStatus'    => [ 'required' => false, 'sanitize_callback' => 'sanitize_text_field' ],
         ];
+    }
+
+    // ─── Tạo signed payment order cho Zalo Pay ─────────────────────────────────
+    public function handle_create_payment_order( WP_REST_Request $request ) {
+        $key2 = MIRA_ZALO_APP_KEY2;
+        if ( $key2 === 'YOUR_ZALO_KEY2' ) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'Zalo Pay chưa được cấu hình. Vui lòng liên hệ admin.',
+            ], 503);
+        }
+
+        $data      = $request->get_params();
+        $app_id    = MIRA_ZALO_APP_ID;
+        $amount    = MIRA_DEPOSIT_AMOUNT;
+        $desc      = "Đặt cọc phòng – " . $data['hotelName'] . " – " . $data['checkIn'];
+        $extradata = wp_json_encode([
+            'name'      => $data['name'],
+            'phone'     => $data['phone'],
+            'hotelName' => $data['hotelName'],
+            'checkIn'   => $data['checkIn'],
+        ]);
+
+        $item = wp_json_encode([[
+            'itemid'       => 'deposit-1',
+            'itemname'     => 'Đặt cọc phòng ' . $data['hotelName'],
+            'itemprice'    => $amount,
+            'itemquantity' => 1,
+        ]]);
+
+        // MAC = HMAC_SHA256(appId|amount|item|desc|extradata, key2)
+        $mac_data = $app_id . '|' . $amount . '|' . $item . '|' . $desc . '|' . $extradata;
+        $mac      = hash_hmac( 'sha256', $mac_data, $key2 );
+
+        return new WP_REST_Response([
+            'success'   => true,
+            'amount'    => $amount,
+            'item'      => json_decode( $item ),
+            'desc'      => $desc,
+            'mac'       => $mac,
+            'extradata' => $extradata,
+            'appId'     => $app_id,
+        ], 200);
     }
 
     public function handle_booking( WP_REST_Request $request ) {
@@ -108,17 +173,19 @@ class Mira_Booking_API {
             'post_title'  => "[{$data['hotelName']}] {$data['name']} – {$data['checkIn']}",
             'post_status' => 'publish',
             'meta_input'  => [
-                '_mira_hotel_id'   => $data['hotelId'],
-                '_mira_hotel_name' => $data['hotelName'],
-                '_mira_check_in'   => $data['checkIn'],
-                '_mira_check_out'  => $data['checkOut'],
-                '_mira_adults'     => $data['adults'],
-                '_mira_children'   => $data['children'],
-                '_mira_name'       => $data['name'],
-                '_mira_phone'      => $data['phone'],
-                '_mira_note'       => $data['note'],
-                '_mira_zalo_id'    => $data['zaloUserId'] ?? '',
-                '_mira_source'     => 'zalo_miniapp',
+                '_mira_hotel_id'       => $data['hotelId'],
+                '_mira_hotel_name'     => $data['hotelName'],
+                '_mira_check_in'       => $data['checkIn'],
+                '_mira_check_out'      => $data['checkOut'],
+                '_mira_adults'         => $data['adults'],
+                '_mira_children'       => $data['children'],
+                '_mira_name'           => $data['name'],
+                '_mira_phone'          => $data['phone'],
+                '_mira_note'           => $data['note'],
+                '_mira_zalo_id'        => $data['zaloUserId'] ?? '',
+                '_mira_source'         => 'zalo_miniapp',
+                '_mira_zalopay_order'  => $data['zalopayOrderId'] ?? '',
+                '_mira_zalopay_status' => $data['zalopayStatus'] ?? 'none',
             ],
         ]);
         return $post_id;
