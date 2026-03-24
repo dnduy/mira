@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Page, Box, Text, Button } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
@@ -16,11 +16,19 @@ const HotelsPage = () => {
     if (hotels.length === 0) fetchHotels();
   }, []);
 
-  // Pull-to-refresh: tải lại danh sách khách sạn
-  const handlePullToRefresh = useCallback(async (done) => {
-    await fetchHotels();
-    done();
-  }, [fetchHotels]);
+  // Pull-to-refresh thủ công bằng touch events
+  const touchStartY = useRef(0);
+
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = useCallback(async (e) => {
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    if (deltaY > 80 && window.scrollY === 0 && !hotelsLoading) {
+      await fetchHotels();
+    }
+  }, [fetchHotels, hotelsLoading]);
 
   const filtered =
     activeFilter === "Tất cả"
@@ -28,7 +36,7 @@ const HotelsPage = () => {
       : hotels.filter((h) => h.tag === activeFilter);
 
   return (
-    <Page onLoad={handlePullToRefresh}>
+    <Page onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       {/* Header */}
       <Box
         style={{

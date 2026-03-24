@@ -5,13 +5,13 @@
  */
 import React from "react";
 import { Box, Text, Button } from "zmp-ui";
-import { requestReview } from "zmp-sdk/apis";
+import { addRating } from "zmp-sdk/apis";
 
 const ReviewModal = ({ onClose }) => {
   // Gọi hộp thoại đánh giá native Zalo
   const handleReview = async () => {
     try {
-      await requestReview();
+      await addRating();
     } catch {
       // requestReview không hỗ trợ trên thiết bị này — bỏ qua
     } finally {

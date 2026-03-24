@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState, useRef } from "react";
 import { Page, Box, Text, Button } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
@@ -15,14 +15,26 @@ const HomePage = () => {
     if (hotels.length === 0) fetchHotels();
   }, []);
 
-  // Pull-to-refresh: tải lại danh sách khách sạn
-  const handlePullToRefresh = useCallback(async (done) => {
-    await fetchHotels();
-    done();
-  }, [fetchHotels]);
+  // Pull-to-refresh thủ công bằng touch events
+  const touchStartY = useRef(0);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = useCallback(async (e) => {
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    // Chỉ refresh khi vuốt xuống > 80px và đang ở đầu trang
+    if (deltaY > 80 && window.scrollY === 0 && !hotelsLoading) {
+      setRefreshing(true);
+      await fetchHotels();
+      setRefreshing(false);
+    }
+  }, [fetchHotels, hotelsLoading]);
 
   return (
-    <Page className="home-page" onLoad={handlePullToRefresh}>
+    <Page className="home-page" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       {/* Hero Banner */}
       <Box style={{ position: "relative", overflow: "hidden" }}>
         <img
