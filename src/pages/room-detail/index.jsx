@@ -2,6 +2,7 @@ import React from "react";
 import { Page, Box, Text, Button } from "zmp-ui";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
+import { handleShareRoom } from "../../utils/share";
 
 const RoomDetailPage = () => {
   const { hotelId, roomId } = useParams();
@@ -237,19 +238,43 @@ const RoomDetailPage = () => {
           </Text>
         </Box>
 
-        <Button
-          style={{
-            background: "#C9A84C",
-            color: "#1A2535",
-            borderRadius: 12,
-            fontWeight: 700,
-            fontSize: 15,
-            height: 50,
-          }}
-          onClick={handleBooking}
-        >
-          Đặt phòng này ngay
-        </Button>
+        <Box style={{ display: "flex", gap: 10 }}>
+          <Button
+            style={{
+              flex: 1,
+              background: "#C9A84C",
+              color: "#1A2535",
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: 15,
+              height: 50,
+            }}
+            onClick={handleBooking}
+          >
+            Đặt phòng này ngay
+          </Button>
+          {/* Nút chia sẻ phòng đến bạn bè Zalo */}
+          <Button
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 12,
+              background: "#EFF6FF",
+              border: "1px solid #BFDBFE",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              padding: 0,
+            }}
+            onClick={() => handleShareRoom(hotel, room)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM18 22a3 3 0 100-6 3 3 0 000 6z" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </Button>
+        </Box>
       </Box>
     </Page>
   );

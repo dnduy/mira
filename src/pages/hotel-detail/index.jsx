@@ -3,6 +3,7 @@ import { Page, Box, Text, Button } from "zmp-ui";
 import { useParams, useNavigate as useRouterNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import { HotelDetailSkeleton } from "../../components/LoadingSkeleton";
+import { handleShareHotel } from "../../utils/share";
 
 const AMENITIES = [
   "📶 Wifi miễn phí",
@@ -272,19 +273,43 @@ const HotelDetailPage = () => {
         )}
 
         {/* CTA */}
-        <Button
-          style={{
-            background: "#C9A84C",
-            color: "#1A2535",
-            borderRadius: 12,
-            fontWeight: 700,
-            fontSize: 15,
-            height: 48,
-          }}
-          onClick={handleBooking}
-        >
-          Đặt phòng {currentHotel.name}
-        </Button>
+        <Box style={{ display: "flex", gap: 10 }}>
+          <Button
+            style={{
+              flex: 1,
+              background: "#C9A84C",
+              color: "#1A2535",
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: 15,
+              height: 48,
+            }}
+            onClick={handleBooking}
+          >
+            Đặt phòng ngay
+          </Button>
+          {/* Nút chia sẻ khách sạn đến bạn bè Zalo */}
+          <Button
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 12,
+              background: "#EFF6FF",
+              border: "1px solid #BFDBFE",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              padding: 0,
+            }}
+            onClick={() => handleShareHotel(currentHotel)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM18 22a3 3 0 100-6 3 3 0 000 6z" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </Button>
+        </Box>
       </Box>
     </Page>
   );

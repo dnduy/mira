@@ -4,6 +4,7 @@ import { handleCall, handleOpenChat } from "../../utils/contact";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import { wpApi } from "../../services/api";
+import ReviewModal from "../../components/ReviewModal";
 import dayjs from "dayjs";
 
 const HOTEL_OPTIONS = [
@@ -21,6 +22,8 @@ const BookingPage = () => {
   const { openSnackbar } = useSnackbar();
   const { bookingForm, setBookingField, resetBookingForm, user } = useAppStore();
   const [loading, setLoading] = useState(false);
+  // Hiện popup đánh giá sau khi đặt phòng thành công
+  const [showReview, setShowReview] = useState(false);
 
   const today = dayjs().format("YYYY-MM-DD");
   const tomorrow = dayjs().add(1, "day").format("YYYY-MM-DD");
@@ -61,7 +64,8 @@ const BookingPage = () => {
         duration: 4000,
       });
       resetBookingForm();
-      navigate("/");
+      // Hiện popup kêu gọi đánh giá sau 1.5s để snackbar hiển trước
+      setTimeout(() => setShowReview(true), 1500);
     } catch (err) {
       openSnackbar({
         text: "Lỗi gửi đặt phòng. Vui lòng gọi trực tiếp 0256 XXX XXXX",
@@ -75,6 +79,10 @@ const BookingPage = () => {
 
   return (
     <Page>
+      {/* Popup đánh giá app sau khi đặt phòng thành công */}
+      {showReview && (
+        <ReviewModal onClose={() => { setShowReview(false); navigate("/"); }} />
+      )}
       {/* Header */}
       <Box
         style={{

@@ -1,18 +1,18 @@
 import React, { useEffect, lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
-import { App, ZMPRouter, Route, AnimationRoutes, SnackbarProvider } from "zmp-ui";
+import { App, ZMPRouter, Route, AnimationRoutes, SnackbarProvider, useNavigate } from "zmp-ui";
 import "zmp-ui/zaui.css";
 import FloatingContact from "./components/FloatingContact";
 import { useAppStore } from "./services/store";
 
 // Lazy load tất cả pages — mỗi page chỉ tải khi user điều hướng đến
-const HomePage       = lazy(() => import("./pages/home"));
-const HotelsPage     = lazy(() => import("./pages/hotels"));
+const HomePage        = lazy(() => import("./pages/home"));
+const HotelsPage      = lazy(() => import("./pages/hotels"));
 const HotelDetailPage = lazy(() => import("./pages/hotel-detail"));
-const BookingPage    = lazy(() => import("./pages/booking"));
-const ExplorePage    = lazy(() => import("./pages/explore"));
-const PostDetailPage = lazy(() => import("./pages/post-detail"));
-const RoomDetailPage = lazy(() => import("./pages/room-detail"));
+const BookingPage     = lazy(() => import("./pages/booking"));
+const ExplorePage     = lazy(() => import("./pages/explore"));
+const PostDetailPage  = lazy(() => import("./pages/post-detail"));
+const RoomDetailPage  = lazy(() => import("./pages/room-detail"));
 
 // Fallback hiển thị trong khi chunk đang tải
 const PageLoader = () => (
@@ -35,6 +35,32 @@ const PageLoader = () => (
   </div>
 );
 
+/**
+ * Xử lý deep link khi app được mở từ link chia sẻ.
+ * Đọc query params ?hotelId=xxx&roomId=yyy và điều hướng đến đúng trang.
+ */
+const DeepLinkHandler = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hotelId = params.get("hotelId");
+    const roomId  = params.get("roomId");
+    const postId  = params.get("postId");
+
+    if (hotelId && roomId) {
+      navigate(`/hotel/${hotelId}/room/${roomId}`);
+    } else if (hotelId) {
+      navigate(`/hotel/${hotelId}`);
+    } else if (postId) {
+      navigate(`/post/${postId}`);
+    }
+    // Nếu không có params → ở lại trang chủ (mặc định)
+  }, []);
+
+  return null;
+};
+
 const MyApp = () => {
   const { initUser } = useAppStore();
 
@@ -47,6 +73,7 @@ const MyApp = () => {
     <App>
       <SnackbarProvider>
         <ZMPRouter>
+          <DeepLinkHandler />
           <Suspense fallback={<PageLoader />}>
             <AnimationRoutes>
               <Route path="/" element={<HomePage />} />
