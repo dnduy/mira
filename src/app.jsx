@@ -62,11 +62,12 @@ const DeepLinkHandler = () => {
 };
 
 const MyApp = () => {
-  const { initUser } = useAppStore();
+  const { initUser, loadPoints } = useAppStore();
 
   useEffect(() => {
-    // Lấy thông tin user Zalo khi app khởi động
+    // Lấy thông tin user Zalo và điểm tích luỹ khi app khởi động
     initUser();
+    loadPoints();
   }, []);
 
   return (

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import HotelCard from "../../components/HotelCard";
 import LoadingSkeleton from "../../components/LoadingSkeleton";
+import LoyaltyBadge from "../../components/LoyaltyBadge";
 import Footer from "../../components/Footer";
 import "./styles.css";
 
@@ -57,6 +58,10 @@ const HomePage = () => {
             Khám phá Quy Nhơn{"\n"}cùng Mira Hotel
           </Text>
           <Text className="hero-sub">7 khách sạn · Cách biển ≤ 200m</Text>
+          {/* Badge điểm tích luỹ */}
+          <Box style={{ marginTop: 10 }}>
+            <LoyaltyBadge />
+          </Box>
           <Box className="hero-actions">
             <Button
               className="btn-primary"

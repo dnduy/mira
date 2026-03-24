@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Page, Box, Text, Button, Input, Select, Picker, useSnackbar } from "zmp-ui";
 import { handleCall, handleOpenChat } from "../../utils/contact";
 import { handleDeposit, DEPOSIT_AMOUNT } from "../../utils/payment";
+import { askOAInteract, askNotificationPermission } from "../../utils/notification";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import { wpApi } from "../../services/api";
@@ -21,7 +22,7 @@ const HOTEL_OPTIONS = [
 const BookingPage = () => {
   const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
-  const { bookingForm, setBookingField, resetBookingForm, user } = useAppStore();
+  const { bookingForm, setBookingField, resetBookingForm, user, addPoints } = useAppStore();
   const [loading, setLoading] = useState(false);
   // Hiện popup đánh giá sau khi đặt phòng thành công
   const [showReview, setShowReview] = useState(false);
@@ -97,6 +98,13 @@ const BookingPage = () => {
         duration: 4000,
       });
       resetBookingForm();
+      // Cộng 100 điểm tích luỹ
+      addPoints(100);
+      // Yêu cầu follow OA + bật notification sau 2s (không chặn UI)
+      setTimeout(() => {
+        askOAInteract();
+        askNotificationPermission();
+      }, 2000);
       setTimeout(() => setShowReview(true), 1500);
     } catch (err) {
       openSnackbar({

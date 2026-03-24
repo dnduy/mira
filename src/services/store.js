@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getUserInfo } from "zmp-sdk";
+import { getUserInfo, nativeStorage } from "zmp-sdk/apis";
 import { wpApi } from "./api";
 
 export const useAppStore = create((set, get) => ({
@@ -111,4 +111,30 @@ export const useAppStore = create((set, get) => ({
         note: "",
       },
     }),
+
+  // ─── Loyalty Points ───────────────────────────────────────
+  loyaltyPoints: 0,
+
+  /** Đọc điểm tích luỹ từ nativeStorage (gọi khi app khởi động). */
+  loadPoints: () => {
+    try {
+      const saved = nativeStorage.getItem("mira_loyalty_points");
+      const val = saved ? parseInt(saved, 10) : 0;
+      set({ loyaltyPoints: isNaN(val) ? 0 : val });
+    } catch {
+      set({ loyaltyPoints: 0 });
+    }
+  },
+
+  /** Cộng điểm sau khi đặt phòng thành công và lưu lại. */
+  addPoints: (n) => {
+    const prev = (get().loyaltyPoints || 0);
+    const next = prev + n;
+    set({ loyaltyPoints: next });
+    try {
+      nativeStorage.setItem("mira_loyalty_points", String(next));
+    } catch {
+      // bỏ qua lỗi storage
+    }
+  },
 }));
