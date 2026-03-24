@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, Text } from "zmp-ui";
+import { handleCall } from "../utils/contact";
 
 const PHONE = "02563822222";
 const ZALO_PHONE = "02563822222";
@@ -30,14 +31,14 @@ const buttons = [
     gradient: "linear-gradient(135deg, #0EA5E9, #0369A1)",
     shadow: "rgba(14,165,233,0.45)",
     Icon: PhoneIcon,
-    action: () => window.open(`tel:${PHONE}`),
+    action: () => handleCall(PHONE),
   },
   {
     label: "Chat Zalo",
     gradient: "linear-gradient(135deg, #3B82F6, #1D4ED8)",
     shadow: "rgba(59,130,246,0.45)",
     Icon: ZaloIcon,
-    action: () => window.open(`https://zalo.me/${ZALO_PHONE}`),
+    action: () => handleCall(ZALO_PHONE),
   },
   {
     label: "Messenger",

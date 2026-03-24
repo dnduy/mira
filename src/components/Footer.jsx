@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Text } from "zmp-ui";
+import { handleCall } from "../utils/contact";
 
 // TODO: cập nhật số điện thoại thực tế và ID Zalo OA
 const PHONE = "02563822222";
@@ -72,13 +73,13 @@ const Footer = () => (
           emoji="📞"
           label="Gọi ngay"
           bg="#1D7FA3"
-          onClick={() => window.open(`tel:${PHONE}`)}
+          onClick={() => handleCall(PHONE)}
         />
         <ContactBtn
           emoji="💬"
           label="Chat Zalo"
           bg="#0068FF"
-          onClick={() => window.open(`https://zalo.me/${ZALO_PHONE}`)}
+          onClick={() => handleCall(ZALO_PHONE)}
         />
         <ContactBtn
           emoji="👍"
@@ -100,7 +101,7 @@ const Footer = () => (
           justifyContent: "space-between",
           cursor: "pointer",
         }}
-        onClick={() => window.open(`tel:${PHONE}`)}
+        onClick={() => handleCall(PHONE)}
       >
         <Box>
           <Text style={{ color: "rgba(255,255,255,0.55)", fontSize: 11 }}>

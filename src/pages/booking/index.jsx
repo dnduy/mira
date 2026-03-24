@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Page, Box, Text, Button, Input, Select, Picker, useSnackbar } from "zmp-ui";
+import { handleCall } from "../../utils/contact";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import { wpApi } from "../../services/api";
@@ -217,7 +218,7 @@ const BookingPage = () => {
           <Button
             variant="secondary"
             style={{ borderRadius: 12, height: 44, fontSize: 13 }}
-            onClick={() => window.open("tel:02563821234")}
+            onClick={() => handleCall("02563821234")}
           >
             📞 Gọi trực tiếp
           </Button>
