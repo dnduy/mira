@@ -5,6 +5,16 @@ import "zmp-ui/zaui.css";
 import FloatingContact from "./components/FloatingContact";
 import { useAppStore } from "./services/store";
 
+// Suppress React Router v6 future flag warnings — ZMPRouter wraṕs BrowserRouter
+// internally và không expose future prop, sẽ tự hết khi zmp-ui upgrade lên RR v7
+if (import.meta.env.DEV) {
+  const _warn = console.warn;
+  console.warn = (...args) => {
+    if (typeof args[0] === "string" && args[0].includes("React Router Future Flag Warning")) return;
+    _warn(...args);
+  };
+}
+
 // Lazy load tất cả pages — mỗi page chỉ tải khi user điều hướng đến
 const HomePage        = lazy(() => import("./pages/home"));
 const HotelsPage      = lazy(() => import("./pages/hotels"));

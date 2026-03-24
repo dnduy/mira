@@ -238,9 +238,10 @@ const BookingPage = () => {
             placeholder="VD: phòng tầng cao, view biển, giường đôi..."
             value={bookingForm.note}
             onChange={(e) => setBookingField("note", e.target.value)}
-            showCount
-            maxLength={200}
           />
+          <Text style={{ fontSize: 11, color: "#aaa", textAlign: "right", marginTop: 3 }}>
+            {(bookingForm.note || "").length}/200
+          </Text>
         </Box>
 
         {/* Chọn hình thức thanh toán */}
