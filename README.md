@@ -300,3 +300,135 @@ if ( ! wp_next_scheduled('mira_refresh_zalo_token') ) {
 | Footer địa chỉ | ✅ |
 | Nút liên hệ nhanh nổi | ✅ |
 | Chỉ đường Google Maps | ✅ |
+
+---
+
+## 📋 Nhật ký phát triển – 24/03/2026
+
+### Bước 1 – Tích hợp `openPhone` (Gọi điện qua Zalo SDK)
+
+- `src/components/FloatingContact.jsx`: Thay `window.open("tel:...")` bằng `openPhone({ phoneNumber: "02563822222" })` từ Zalo Mini App SDK để gọi điện đúng chuẩn native.
+- Commit: `67a6b11`
+
+---
+
+### Bước 2 – Tích hợp `openChat` (Chat OA trong Zalo)
+
+- `src/components/FloatingContact.jsx`: Thay link `https://zalo.me/...` bằng `openChat({ type: "oa", id: "1472945004483222469" })` để mở chat OA Mira trực tiếp trong Zalo.
+- Commit: `ca2aca4`
+
+---
+
+### Bước 3 – SEO metadata
+
+- `src/index.html` + `index.html` gốc: Thêm `<title>`, `<meta name="description">`, Open Graph tags (`og:title`, `og:description`, `og:image`, `og:url`) cho app.
+- Commit: `d59f0f7`
+
+---
+
+### Bước 4 – Tích hợp Zalo Pay (cọc đặt phòng)
+
+**Phía Mini App:**
+- Tạo `src/utils/payment.js`:
+  - Hàm `handleDeposit(bookingInfo)` gọi WP API để tạo order → `createOrder()` → `checkTransaction()` từ Zalo Pay SDK
+  - Hằng số `DEPOSIT_AMOUNT = 200_000` (200.000đ)
+- `src/pages/booking/index.jsx`: Thêm nút **"Cọc 200.000đ qua Zalo Pay"** trong trang đặt phòng
+
+**Phía WordPress Plugin (`wordpress-plugin/mira-booking-api.php`):**
+- Thêm constants: `MIRA_ZALO_APP_KEY2`, `MIRA_DEPOSIT_AMOUNT`
+- Endpoint mới: `POST /mira/v1/payment/order` → tính HMAC-SHA256 MAC phía server, trả về order params cho SDK
+- Lưu `zalopayOrderId`, `zalopayStatus` cùng với booking
+- Commit: `9ba65ab`
+
+---
+
+### Bước 5 – Hiệu năng (Lazy load, Skeleton, Pull-to-refresh, Code splitting)
+
+- `src/app.jsx`: Đổi tất cả `import` trang sang `React.lazy()` + `<Suspense>`
+- `src/components/LoadingSkeleton.jsx`: Tạo skeleton shimmer cho danh sách khách sạn, chi tiết khách sạn, chi tiết phòng, bài viết
+- Pull-to-refresh: Xử lý bằng touch events (`onTouchStart` / `onTouchMove` / `onTouchEnd`) thay vì `onLoad` (không hỗ trợ bởi `zmp-ui`)
+- `vite.config.mts`: Thêm `optimizeDeps.include` cho các thư viện nặng, `server.warmup.clientFiles`, `manualChunks` code splitting (vendor-react, vendor-zmp, vendor-router)
+- Commit: `e565318`
+
+---
+
+### Bước 6 – Deep link, Share, Review
+
+- `src/utils/share.js`: Tạo các hàm `handleShareHotel()`, `handleShareRoom()` dùng `openShareSheet()` + `getShareableLink()` từ Zalo SDK
+- `src/pages/hotel-detail/index.jsx`: Thêm nút **Chia sẻ**
+- `src/pages/room-detail/index.jsx`: Thêm nút **Chia sẻ** phòng
+- `src/components/ReviewModal.jsx`: Modal đánh giá, gọi `addRating()` (đúng API SDK) 
+- `src/pages/home/index.jsx`: Hiển thị nút mời đánh giá sau lần dùng thứ 3
+- Commit: `530d421`
+
+---
+
+### Bước 7 – OA Notifications + Loyalty Points
+
+- `src/utils/notification.js`:
+  - `askOAInteract()` → gọi `interactOA({ oaId: "1472945004483222469" })`
+  - `askNotificationPermission()` → gọi `requestSendNotification()`
+- `src/components/LoyaltyBadge.jsx`: Hiển thị số điểm tích lũy trên hero trang chủ, click mở modal 4 hạng thành viên (Đồng / Bạc / Vàng / Kim Cương)
+- `src/services/store.js`:
+  - Thêm state `loyaltyPoints`, `loadPoints()` (đọc `nativeStorage`), `addPoints(n)` (ghi `nativeStorage`)
+  - Mỗi lần gửi form đặt phòng thành công → +10 điểm
+- Commit: `973857b`
+
+---
+
+### Sửa lỗi sau khi tích hợp SDK
+
+| Lỗi | Nguyên nhân | Fix |
+|---|---|---|
+| `share` not exported | API không tồn tại trong SDK | Dùng `openShareSheet` |
+| `requestReview` not exported | API không tồn tại | Dùng `addRating` |
+| `done is not a function` | `Page` (zmp-ui) không có prop `onLoad` | Dùng touch events pull-to-refresh |
+| Hàm `handleShareRoom` bị duplicate | File có cả code cũ lẫn mới | Xoá block cũ |
+| Favicon 404 | Không có file `.ico` | Tạo `src/favicon.ico` + thêm `<link rel="icon">` vào `index.html` |
+| Warning `numberOfLines` | zmp-ui truyền prop không hợp lệ vào DOM | Dùng CSS `text-overflow: ellipsis` thay thế |
+| Warning `showCount` | `Input` của zmp-ui truyền prop vào DOM | Xoá prop, tự làm counter bằng `<Text>` |
+| React Router future flags warning | `ZMPRouter` không nhận prop `future` | Override `console.warn` trong DEV |
+- Commits: `8c081da`, `536cdcb`, `abe0620`, `fa270a2`
+
+---
+
+### Thành phần `BackBar` – Nút quay lại nhất quán toàn app
+
+**Vấn đề:** Mỗi trang có kiểu nút quay lại khác nhau (nhỏ, khó bấm, không đồng nhất).
+
+**Giải pháp:**
+- Tạo `src/components/BackBar.jsx`:
+  - Thanh cao 52px, vùng chạm tối thiểu 44px (chuẩn accessibility)
+  - Icon chevron-left SVG + chữ **"Quay lại"**
+  - Props: `title` (tên trang), `to` (route đích, mặc định `navigate(-1)`), `bg`, `light`
+- Áp dụng cho **6 trang**: `hotels`, `booking`, `explore`, `hotel-detail`, `room-detail`, `post-detail`
+- Thay thế toàn bộ nút inline cũ (overlay button trong hero, `<Box>` tự tạo, ký tự `←`)
+- Commit: `863c515`
+
+---
+
+### Tổng kết trạng thái sau ngày 24/03/2026
+
+| Tính năng | Trạng thái |
+|---|---|
+| App khởi động, simulator chạy | ✅ |
+| Danh sách + chi tiết khách sạn | ✅ |
+| Hình ảnh thực từ miraquynhon.com | ✅ |
+| Xem phòng + chi tiết phòng | ✅ |
+| Đặt phòng (form) | ✅ |
+| Cọc đặt phòng qua Zalo Pay | ✅ |
+| Khám phá Quy Nhơn (bài viết WP) | ✅ |
+| Xem bài viết trong app | ✅ |
+| Footer địa chỉ 7 chi nhánh | ✅ |
+| Nút liên hệ nhanh nổi (gọi / chat OA / Facebook) | ✅ |
+| Chỉ đường Google Maps | ✅ |
+| Gọi điện native qua Zalo SDK | ✅ |
+| Chat OA Mira trong Zalo | ✅ |
+| SEO metadata / Open Graph | ✅ |
+| Lazy load + Skeleton + Pull-to-refresh | ✅ |
+| Code splitting (vendor chunks) | ✅ |
+| Chia sẻ khách sạn / phòng qua Zalo | ✅ |
+| Đánh giá app (addRating) | ✅ |
+| OA Notifications (requestSendNotification) | ✅ |
+| Tích điểm loyalty (nativeStorage) | ✅ |
+| Nút quay lại chuẩn (BackBar) toàn app | ✅ |
