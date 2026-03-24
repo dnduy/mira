@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Page, Box, Text, Button } from "zmp-ui";
 import { useParams, useNavigate as useRouterNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
+import { HotelDetailSkeleton } from "../../components/LoadingSkeleton";
 
 const AMENITIES = [
   "📶 Wifi miễn phí",
@@ -32,9 +33,7 @@ const HotelDetailPage = () => {
   if (!currentHotel) {
     return (
       <Page>
-        <Box style={{ padding: 24, textAlign: "center" }}>
-          <Text>Đang tải thông tin khách sạn...</Text>
-        </Box>
+        <HotelDetailSkeleton />
       </Page>
     );
   }

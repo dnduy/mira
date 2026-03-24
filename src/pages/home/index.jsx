@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { Page, Box, Text, Button } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
@@ -15,8 +15,14 @@ const HomePage = () => {
     if (hotels.length === 0) fetchHotels();
   }, []);
 
+  // Pull-to-refresh: tải lại danh sách khách sạn
+  const handlePullToRefresh = useCallback(async (done) => {
+    await fetchHotels();
+    done();
+  }, [fetchHotels]);
+
   return (
-    <Page className="home-page">
+    <Page className="home-page" onLoad={handlePullToRefresh}>
       {/* Hero Banner */}
       <Box style={{ position: "relative", overflow: "hidden" }}>
         <img

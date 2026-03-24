@@ -10,6 +10,16 @@ export default () => {
     plugins: [zaloMiniApp(), react()],
     build: {
       assetsInlineLimit: 0,
+      rollupOptions: {
+        output: {
+          // Tách vendor chunks — React, ZMP SDK cache lâu hơn vì ít thay đổi
+          manualChunks: {
+            "vendor-react": ["react", "react-dom"],
+            "vendor-zmp": ["zmp-sdk", "zmp-ui"],
+            "vendor-router": ["react-router-dom"],
+          },
+        },
+      },
     },
     resolve: {
       alias: {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Page, Box, Text, Button } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
@@ -16,13 +16,19 @@ const HotelsPage = () => {
     if (hotels.length === 0) fetchHotels();
   }, []);
 
+  // Pull-to-refresh: tải lại danh sách khách sạn
+  const handlePullToRefresh = useCallback(async (done) => {
+    await fetchHotels();
+    done();
+  }, [fetchHotels]);
+
   const filtered =
     activeFilter === "Tất cả"
       ? hotels
       : hotels.filter((h) => h.tag === activeFilter);
 
   return (
-    <Page>
+    <Page onLoad={handlePullToRefresh}>
       {/* Header */}
       <Box
         style={{
