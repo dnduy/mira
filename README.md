@@ -326,19 +326,16 @@ if ( ! wp_next_scheduled('mira_refresh_zalo_token') ) {
 
 ---
 
-### Bước 4 – Tích hợp Zalo Pay (cọc đặt phòng)
+### Bước 4 – ~~Tích hợp Zalo Pay (cọc đặt phòng)~~ *(Đã huỷ – 27/03/2026)*
 
-**Phía Mini App:**
-- Tạo `src/utils/payment.js`:
-  - Hàm `handleDeposit(bookingInfo)` gọi WP API để tạo order → `createOrder()` → `checkTransaction()` từ Zalo Pay SDK
-  - Hằng số `DEPOSIT_AMOUNT = 200_000` (200.000đ)
-- `src/pages/booking/index.jsx`: Thêm nút **"Cọc 200.000đ qua Zalo Pay"** trong trang đặt phòng
-
-**Phía WordPress Plugin (`wordpress-plugin/mira-booking-api.php`):**
-- Thêm constants: `MIRA_ZALO_APP_KEY2`, `MIRA_DEPOSIT_AMOUNT`
-- Endpoint mới: `POST /mira/v1/payment/order` → tính HMAC-SHA256 MAC phía server, trả về order params cho SDK
-- Lưu `zalopayOrderId`, `zalopayStatus` cùng với booking
-- Commit: `9ba65ab`
+> Tính năng đặt cọc qua Zalo Pay đã được **gỡ bỏ hoàn toàn** khỏi ứng dụng.
+>
+> **Các thành phần đã xoá:**
+> - `src/utils/payment.js` — file tiện ích đặt cọc (đã xoá)
+> - `src/pages/booking/index.jsx` — gỡ import, state `paymentMode`, khối Zalo Pay, UI chọn hình thức thanh toán
+> - `wordpress-plugin/mira-booking-api.php` — gỡ constants `MIRA_ZALO_APP_KEY2` / `MIRA_DEPOSIT_AMOUNT`, route `/payment/order`, method `handle_create_payment_order`, fields `zalopayOrderId`/`zalopayStatus`
+>
+> Trang đặt phòng bây giờ chỉ có một luồng: **"Gửi yêu cầu đặt phòng"** — nhân viên Mira sẽ liên hệ xác nhận.
 
 ---
 
@@ -416,7 +413,7 @@ if ( ! wp_next_scheduled('mira_refresh_zalo_token') ) {
 | Hình ảnh thực từ miraquynhon.com | ✅ |
 | Xem phòng + chi tiết phòng | ✅ |
 | Đặt phòng (form) | ✅ |
-| Cọc đặt phòng qua Zalo Pay | ✅ |
+| Cọc đặt phòng qua Zalo Pay | ~~✅~~ ❌ Đã huỷ |
 | Khám phá Quy Nhơn (bài viết WP) | ✅ |
 | Xem bài viết trong app | ✅ |
 | Footer địa chỉ 7 chi nhánh | ✅ |
@@ -432,3 +429,4 @@ if ( ! wp_next_scheduled('mira_refresh_zalo_token') ) {
 | OA Notifications (requestSendNotification) | ✅ |
 | Tích điểm loyalty (nativeStorage) | ✅ |
 | Nút quay lại chuẩn (BackBar) toàn app | ✅ |
+iu
