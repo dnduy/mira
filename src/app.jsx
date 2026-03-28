@@ -4,6 +4,7 @@ import { App, ZMPRouter, Route, AnimationRoutes, SnackbarProvider, useNavigate }
 import "zmp-ui/zaui.css";
 import FloatingContact from "./components/FloatingContact";
 import { useAppStore } from "./services/store";
+import { retryPendingConnect } from "./utils/zaloConnect";
 
 // Suppress React Router v6 future flag warnings — ZMPRouter wraṕs BrowserRouter
 // internally và không expose future prop, sẽ tự hết khi zmp-ui upgrade lên RR v7
@@ -72,12 +73,14 @@ const DeepLinkHandler = () => {
 };
 
 const MyApp = () => {
-  const { initUser, loadPoints } = useAppStore();
+  const { initUser, loadPoints, loadUserConnection } = useAppStore();
 
   useEffect(() => {
-    // Lấy thông tin user Zalo và điểm tích luỹ khi app khởi động
+    // Lấy thông tin user Zalo, điểm tích luỹ và trạng thái kết nối OA khi app khởi động
     initUser();
     loadPoints();
+    loadUserConnection();
+    retryPendingConnect();
   }, []);
 
   return (

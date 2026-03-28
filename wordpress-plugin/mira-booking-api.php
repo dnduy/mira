@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Mira Booking API
  * Description: Custom REST API cho Zalo Mini App – nhận đặt phòng, gửi email + Zalo OA notification
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Mira Quy Nhon
  */
 
@@ -18,6 +18,10 @@ define( 'MIRA_FROM_NAME',     'Mira Quy Nhon Hotel' );
 define( 'MIRA_ZALO_OA_TOKEN', defined('ZALO_OA_ACCESS_TOKEN') ? ZALO_OA_ACCESS_TOKEN : 'YOUR_OA_ACCESS_TOKEN' );
 define( 'MIRA_ZALO_OA_ID',    'YOUR_OA_ID' );     // OA ID lấy từ Zalo for Business
 define( 'MIRA_ZALO_TEMPLATE_ID', 'YOUR_TEMPLATE_ID' ); // Template ZNS hoặc ZNS Transactional
+// App Secret Key – dùng để đổi phoneToken lấy số điện thoại thật
+// Lấy tại: https://developers.zalo.me/app/<APP_ID>/setting
+define( 'MIRA_ZALO_APP_SECRET', defined('ZALO_APP_SECRET') ? ZALO_APP_SECRET : 'YOUR_APP_SECRET' );
+define( 'MIRA_ZALO_APP_ID',     defined('ZALO_APP_ID')     ? ZALO_APP_ID     : 'YOUR_ZALO_APP_ID' );
 // ─────────────────────────────────────────────────────────────────────────────
 
 class Mira_Booking_API {
@@ -40,6 +44,29 @@ class Mira_Booking_API {
             'callback'            => fn() => new WP_REST_Response(['status' => 'ok'], 200),
             'permission_callback' => '__return_true',
         ]);
+
+        // Lưu thông tin user kết nối OA (lưu lần đầu) hoặc cập nhật (nếu đã tồn tại)
+        register_rest_route( 'mira/v1', '/user-connect', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'handle_user_connect' ],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'zaloUserId'  => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+                'displayName' => [ 'required' => false, 'default' => '',   'sanitize_callback' => 'sanitize_text_field' ],
+                'avatar'      => [ 'required' => false, 'default' => '',   'sanitize_callback' => 'esc_url_raw' ],
+                'phoneToken'  => [ 'required' => false, 'default' => '',   'sanitize_callback' => 'sanitize_text_field' ],
+            ],
+        ]);
+
+        // Kiểm tra trạng thái kết nối của một user
+        register_rest_route( 'mira/v1', '/user-connect/(?P<zaloUserId>[\w\-]+)', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'handle_get_user' ],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'zaloUserId' => [ 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ],
+            ],
+        ]);
     }
 
     private function get_booking_args() {
@@ -59,7 +86,7 @@ class Mira_Booking_API {
         ];
     }
 
-    public function handle_booking( WP_REST_Request $request ) {
+    public function handle_booking( WP_REST_Request $request ) {( WP_REST_Request $request ) {
         $data = $request->get_params();
 
         // Validate ngày
@@ -265,3 +292,153 @@ add_action( 'init', function () {
 });
 
 new Mira_Booking_API();
+
+// ─── Tạo bảng wp_mira_users khi kích hoạt plugin ────────────────────────────────
+register_activation_hook( __FILE__, 'mira_create_users_table' );
+function mira_create_users_table() {
+    global $wpdb;
+    $table   = $wpdb->prefix . 'mira_users';
+    $charset = $wpdb->get_charset_collate();
+    $sql = "CREATE TABLE IF NOT EXISTS {$table} (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        zalo_user_id VARCHAR(64) NOT NULL,
+        display_name VARCHAR(255) NOT NULL DEFAULT '',
+        phone VARCHAR(20) NOT NULL DEFAULT '',
+        avatar_url TEXT NOT NULL DEFAULT '',
+        loyalty_points INT UNSIGNED NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY zalo_user_id (zalo_user_id)
+    ) {$charset};";
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    dbDelta( $sql );
+}
+
+// ─── User Connect handlers (methods added next) ──────────────────────────────
+class Mira_User_Connect {
+
+    /** POST /mira/v1/user-connect */
+    public static function handle_user_connect( WP_REST_Request $request ) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'mira_users';
+
+        $zalo_user_id = $request->get_param('zaloUserId');
+        $display_name = $request->get_param('displayName');
+        $avatar       = $request->get_param('avatar');
+        $phone_token  = $request->get_param('phoneToken');
+
+        // Đổi phoneToken lấy số điện thoại thật (nếu đã cấu hình App Secret)
+        $phone = '';
+        if ( $phone_token && MIRA_ZALO_APP_SECRET !== 'YOUR_APP_SECRET' ) {
+            $phone = self::exchange_phone_token( $phone_token );
+        }
+
+        $existing = $wpdb->get_row(
+            $wpdb->prepare( "SELECT id, phone FROM {$table} WHERE zalo_user_id = %s", $zalo_user_id )
+        );
+
+        if ( $existing ) {
+            // Cập nhật nếu số điện thoại mới
+            $update_data = [ 'display_name' => $display_name ];
+            if ( $phone ) $update_data['phone'] = $phone;
+            if ( $avatar ) $update_data['avatar_url'] = $avatar;
+            $wpdb->update( $table, $update_data, [ 'zalo_user_id' => $zalo_user_id ] );
+            return new WP_REST_Response([ 'success' => true, 'isNew' => false ], 200);
+        }
+
+        // Thêm mới
+        $wpdb->insert( $table, [
+            'zalo_user_id' => $zalo_user_id,
+            'display_name' => $display_name,
+            'phone'        => $phone,
+            'avatar_url'   => $avatar,
+        ]);
+
+        return new WP_REST_Response([ 'success' => true, 'isNew' => true ], 201);
+    }
+
+    /** GET /mira/v1/user-connect/{zaloUserId} */
+    public static function handle_get_user( WP_REST_Request $request ) {
+        global $wpdb;
+        $table        = $wpdb->prefix . 'mira_users';
+        $zalo_user_id = $request->get_param('zaloUserId');
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT display_name, loyalty_points FROM {$table} WHERE zalo_user_id = %s",
+                $zalo_user_id
+            )
+        );
+
+        if ( ! $row ) {
+            return new WP_REST_Response([ 'connected' => false ], 200);
+        }
+
+        return new WP_REST_Response([
+            'connected'     => true,
+            'displayName'   => $row->display_name,
+            'loyaltyPoints' => (int) $row->loyalty_points,
+        ], 200);
+    }
+
+    /**
+     * Đổi phoneToken lấy SĐT thật qua Zalo API.
+     * Docs: https://developers.zalo.me/docs/mini-app/server-api/user/get-user-phone-number
+     *
+     * @param string $token
+     * @return string Số điện thoại (chuẩn hoá) hoặc chuỗi rỗng nếu thất bại
+     */
+    private static function exchange_phone_token( string $token ): string {
+        $response = wp_remote_post(
+            'https://oauth.zaloapp.com/v4/oa/user/getinfobyphonetoken',
+            [
+                'headers' => [ 'Content-Type' => 'application/json' ],
+                'body'    => wp_json_encode([
+                    'app_id'         => MIRA_ZALO_APP_ID,
+                    'app_secret_key' => MIRA_ZALO_APP_SECRET,
+                    'phone_token'    => $token,
+                ]),
+                'timeout' => 8,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            error_log( '[Mira] phone token exchange error: ' . $response->get_error_message() );
+            return '';
+        }
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( isset( $body['error'] ) && $body['error'] !== 0 ) {
+            error_log( '[Mira] phone token exchange: ' . ( $body['message'] ?? 'unknown error' ) );
+            return '';
+        }
+
+        // Chuẩn hoá về dạng 0xxxxxxxxx
+        $phone = $body['data']['number'] ?? '';
+        if ( str_starts_with( $phone, '+84' ) ) {
+            $phone = '0' . substr( $phone, 3 );
+        }
+        return sanitize_text_field( $phone );
+    }
+}
+
+// Đăng ký các phương thức sau khi plugin khởi động
+add_action( 'rest_api_init', function () {
+    register_rest_route( 'mira/v1', '/user-connect', [
+        'methods'             => 'POST',
+        'callback'            => [ 'Mira_User_Connect', 'handle_user_connect' ],
+        'permission_callback' => '__return_true',
+        'args'                => [
+            'zaloUserId'  => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
+            'displayName' => [ 'required' => false, 'default' => '',   'sanitize_callback' => 'sanitize_text_field' ],
+            'avatar'      => [ 'required' => false, 'default' => '',   'sanitize_callback' => 'esc_url_raw' ],
+            'phoneToken'  => [ 'required' => false, 'default' => '',   'sanitize_callback' => 'sanitize_text_field' ],
+        ],
+    ]);
+    register_rest_route( 'mira/v1', '/user-connect/(?P<zaloUserId>[\w\-]+)', [
+        'methods'             => 'GET',
+        'callback'            => [ 'Mira_User_Connect', 'handle_get_user' ],
+        'permission_callback' => '__return_true',
+    ]);
+});

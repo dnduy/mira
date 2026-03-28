@@ -429,4 +429,55 @@ if ( ! wp_next_scheduled('mira_refresh_zalo_token') ) {
 | OA Notifications (requestSendNotification) | ✅ |
 | Tích điểm loyalty (nativeStorage) | ✅ |
 | Nút quay lại chuẩn (BackBar) toàn app | ✅ |
-iu
+
+---
+
+## 📋 Nhật ký phát triển – 28/03/2026
+
+### Zalo Phone Capture + OA Connect
+
+Sau khi đặt phòng thành công, app hiển thị modal kêu gọi user kết nối với OA Mira, xin quyền số điện thoại và lưu thông tin vào WordPress.
+
+**Files tạo mới:**
+
+- `src/utils/zaloConnect.js`:
+  - `connectUserToOA()` — chuỗi: `getUserInfo()` → `getPhoneNumber()` → `interactOA()` → `POST /mira/v1/user-connect`
+  - `checkUserConnected(zaloUserId)` — kiểm tra trạng thái kết nối qua WP API
+  - `retryPendingConnect()` — retry lần mở app tiếp theo nếu lần trước WP endpoint thất bại
+
+- `src/components/ConnectOAModal.jsx`:
+  - Bottom sheet modal, không block booking flow
+  - Hiển thị 3 lợi ích: xác nhận đặt phòng, ưu đãi độc quyền, tích điểm loyalty
+  - Props: `isOpen`, `onAccept`, `onSkip`
+  - Style đồng bộ color scheme vàng/amber của app
+
+**Files chỉnh sửa:**
+
+- `src/services/store.js`: Thêm state + actions:
+  - `isOAConnected`, `zaloUserInfo`, `connectSkipCount`, `_connectSkipUntil`
+  - `loadUserConnection()` — đọc từ nativeStorage khi app khởi động
+  - `setUserConnected(userInfo)` — ghi nativeStorage sau khi kết nối
+  - `incrementSkipCount()` — nếu skip ≥ 2 lần → khoá modal 7 ngày
+  - `shouldShowConnectModal()` — logic kiểm tra có nên hiện modal không
+
+- `src/app.jsx`: Gọi thêm `loadUserConnection()` và `retryPendingConnect()` trong `useEffect` khởi động
+
+- `src/pages/booking/index.jsx`:
+  - Render `<ConnectOAModal>` sau booking thành công
+  - `onAccept` → gọi `connectUserToOA()`, lưu store, rồi mở ReviewModal
+  - `onSkip` → gọi `incrementSkipCount()`, rồi mở ReviewModal
+
+- `wordpress-plugin/mira-booking-api.php` (v1.1.0):
+  - Thêm constants `MIRA_ZALO_APP_SECRET`, `MIRA_ZALO_APP_ID`
+  - Class `Mira_User_Connect`:
+    - `POST /mira/v1/user-connect` — upsert user vào bảng `wp_mira_users`; đổi `phoneToken` lấy SDT thật qua `oauth.zaloapp.com/v4/oa/user/getinfobyphonetoken`
+    - `GET /mira/v1/user-connect/{zaloUserId}` — trả về `{ connected, displayName, loyaltyPoints }`
+  - `register_activation_hook` tạo bảng `wp_mira_users` (id, zalo_user_id unique, display_name, phone, avatar_url, loyalty_points, created_at, updated_at)
+
+**UX rules áp dụng:**
+- Modal chỉ xuất hiện SAU khi snackbar xác nhận đặt phòng (delay 1s)
+- Nếu user đã kết nối (`isOAConnected === true`) → bỏ qua, chỉ hiện ReviewModal
+- Nếu skip ≥ 2 lần → không hiện lại trong 7 ngày
+- Tất cả lỗi SDK bắt im lặng — không bao giờ phá booking flow
+
+**Commit: `TBD` (xem git log)**

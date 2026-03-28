@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Page, Box, Text, Button, Input, Select, Picker, useSnackbar } from "zmp-ui";
 import { handleCall, handleOpenChat } from "../../utils/contact";
 import { askOAInteract, askNotificationPermission } from "../../utils/notification";
+import ConnectOAModal from "../../components/ConnectOAModal";
+import { connectUserToOA } from "../../utils/zaloConnect";
 import BackBar from "../../components/BackBar";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
@@ -22,10 +24,11 @@ const HOTEL_OPTIONS = [
 const BookingPage = () => {
   const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
-  const { bookingForm, setBookingField, resetBookingForm, user, addPoints } = useAppStore();
+  const { bookingForm, setBookingField, resetBookingForm, user, addPoints,
+          shouldShowConnectModal, setUserConnected, incrementSkipCount } = useAppStore();
   const [loading, setLoading] = useState(false);
-  // Hiện popup đánh giá sau khi đặt phòng thành công
   const [showReview, setShowReview] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
 
   const today = dayjs().format("YYYY-MM-DD");
   const tomorrow = dayjs().add(1, "day").format("YYYY-MM-DD");
@@ -68,14 +71,16 @@ const BookingPage = () => {
         duration: 4000,
       });
       resetBookingForm();
-      // Cộng 100 điểm tích luỹ
       addPoints(100);
-      // Yêu cầu follow OA + bật notification sau 2s (không chặn UI)
+      // Hiển thị ConnectOAModal sau 1s (sau khi snackbar hiển) nếu chưa kết nối
       setTimeout(() => {
-        askOAInteract();
-        askNotificationPermission();
-      }, 2000);
-      setTimeout(() => setShowReview(true), 1500);
+        if (shouldShowConnectModal()) {
+          setShowConnectModal(true);
+        } else {
+          // Đã kết nối rồi — chỉ hỏi đánh giá
+          setShowReview(true);
+        }
+      }, 1000);
     } catch (err) {
       openSnackbar({
         text: "Lỗi gửi đặt phòng. Vui lòng gọi trực tiếp 0256 XXX XXXX",
@@ -93,6 +98,25 @@ const BookingPage = () => {
       {showReview && (
         <ReviewModal onClose={() => { setShowReview(false); navigate("/"); }} />
       )}
+      {/* Modal kết nối OA (hiển sau booking, trước ReviewModal) */}
+      <ConnectOAModal
+        isOpen={showConnectModal}
+        onAccept={async () => {
+          setShowConnectModal(false);
+          try {
+            const { userInfo } = await connectUserToOA();
+            setUserConnected(userInfo);
+          } catch { /* bỏ qua */ }
+          // Hiển ReviewModal sau khi kết nối
+          setTimeout(() => setShowReview(true), 400);
+        }}
+        onSkip={() => {
+          setShowConnectModal(false);
+          incrementSkipCount();
+          // Sau khi bỏ qua, vẫn hỏi đánh giá
+          setTimeout(() => setShowReview(true), 400);
+        }}
+      />
       <BackBar title="Đặt phòng" to="/" />
       {/* Header */}
       <Box
