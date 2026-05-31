@@ -481,3 +481,116 @@ Sau khi đặt phòng thành công, app hiển thị modal kêu gọi user kết
 - Tất cả lỗi SDK bắt im lặng — không bao giờ phá booking flow
 
 **Commit: `TBD` (xem git log)**
+
+---
+
+## 📋 Nhật ký phát triển – 31/05/2026
+
+### Giai đoạn 9 – Review & khôi phục + Mira Sun + BottomNav/BottomBar
+
+---
+
+#### 9.1 – Phát hiện và khôi phục file bị xoá
+
+Sau khi review toàn bộ project, phát hiện **19 file source bị xoá** khỏi working tree (chưa commit) khiến app không thể build:
+
+- `src/services/api.js`, `src/services/store.js`
+- `src/pages/home/`, `src/pages/booking/`, `src/pages/explore/`
+- `src/components/HotelCard.jsx`, `FloatingContact.jsx`, `Footer.jsx`, `BackBar.jsx`, `LoadingSkeleton.jsx`, `ConnectOAModal.jsx`, `LoyaltyBadge.jsx`, `ReviewModal.jsx`
+- `src/utils/contact.js`, `share.js`, `zaloConnect.js`, `notification.js`
+- `src/index.html`, `src/favicon.ico`
+
+**Fix:** `git checkout HEAD -- <19 files>` → khôi phục toàn bộ.
+
+---
+
+#### 9.2 – Thêm khách sạn Mira Sun (chi nhánh thứ 8)
+
+**Files thay đổi:** `src/services/api.js`, `src/pages/booking/index.jsx`, `src/components/Footer.jsx`, `src/pages/home/index.jsx`
+
+- `api.js`: Thêm object `id: 8, slug: "mira-sun"` vào `HOTELS_STATIC` (chèn trước Xavia id:7) với đầy đủ 8 loại phòng:
+  Standard · Double · Deluxe Double · Twin Lake View · Trip · Family Lake View · Deluxe Family Sea & Lake · Suite
+- `booking/index.jsx`: Thêm `{ value: "mira-sun", label: "Mira Sun (cạnh Hồ Sinh Thái)" }` vào `HOTEL_OPTIONS`
+- `Footer.jsx`: Thêm `{ name: "Mira Sun Hotel", addr: "Khu Hồ Sinh Thái, TP Quy Nhơn" }` vào `HOTELS`
+- `home/index.jsx`: Đổi **7 → 8** khách sạn ở hero-sub và stat card; cập nhật mô tả thêm "Hồ Sinh Thái"
+
+---
+
+#### 9.3 – BottomNav & BottomBar (điều hướng dưới đáy)
+
+**File tạo mới:** `src/components/BottomNav.jsx`, `src/components/BottomBar.jsx`
+
+**`BottomNav.jsx`** — thanh tab bar 4 mục thay tabBar Zalo mặc định:
+- 4 tab: Trang chủ / Khách sạn / Đặt phòng (nút nổi giữa) / Khám phá
+- Icon SVG tùy chỉnh, active = vàng `#C9A84C`, inactive = xám
+- `position: fixed; bottom: 0; height: 64px` + `env(safe-area-inset-bottom)` cho iPhone
+- Chỉ hiển thị ở trang gốc qua `ConditionalBottomNav` (kiểm tra `location.pathname`)
+
+**`BottomBar.jsx`** — thanh quay lại + CTA cho trang con:
+- Nút "Quay lại" to dễ bấm 1 tay (ngón cái reach zone)
+- Slot `action` (nút phụ) + `actionLabel`/`onAction` (nút CTA chính gradient vàng)
+- Thay `BackBar` trên đầu ở: `hotel-detail`, `room-detail`, `post-detail`
+
+**`app.jsx`** — lazy load tất cả pages, thêm `DeepLinkHandler`, `ConditionalBottomNav`
+
+---
+
+#### 9.4 – Sửa app.config.js (tắt tabBar Zalo)
+
+Xoá toàn bộ block `tabBar` trong `app.config.js` (thay bằng comment giải thích).
+Lý do: giữ `custom: false` sẽ render 2 thanh điều hướng chồng nhau khi dùng `BottomNav` custom.
+
+---
+
+#### 9.5 – Sửa FloatingContact không đè BottomNav
+
+`src/components/FloatingContact.jsx`: `bottom: 80` → `bottom: 140` để nút liên hệ nổi không bị BottomNav che khuất.
+
+---
+
+#### 9.6 – Fix lỗi WordPress plugin
+
+**File:** `wordpress-plugin/mira-booking-api.php`
+
+**Lỗi 1 – PHP Fatal Error (dòng ~89):**
+```php
+// ❌ Trước (duplicate function signature → plugin không load)
+public function handle_booking( WP_REST_Request $request ) {( WP_REST_Request $request ) {
+
+// ✅ Sau
+public function handle_booking( WP_REST_Request $request ) {
+```
+
+**Lỗi 2 – Duplicate route `/user-connect`:**
+Route `POST /user-connect` và `GET /user-connect/{id}` bị đăng ký 2 lần:
+- Lần 1: trong `Mira_Booking_API::register_routes()` — callback trỏ `$this->handle_user_connect` (method không tồn tại trong class này)
+- Lần 2: cuối file, đăng ký bởi `Mira_User_Connect` (đúng)
+
+**Fix:** Xoá 2 `register_rest_route` user-connect thừa trong `Mira_Booking_API::register_routes()`. Giữ nguyên bản ở cuối file trỏ đúng class `Mira_User_Connect`.
+
+---
+
+### Tổng kết trạng thái – 31/05/2026
+
+| Tính năng | Trạng thái |
+|---|---|
+| App khởi động, simulator chạy | ✅ |
+| Danh sách + chi tiết 8 khách sạn | ✅ |
+| **Mira Sun Hotel** (chi nhánh mới, 8 loại phòng) | ✅ |
+| Hình ảnh thực từ miraquynhon.com | ✅ |
+| Xem phòng theo từng chi nhánh | ✅ |
+| Trang chi tiết phòng | ✅ |
+| Đặt phòng (form) | ✅ |
+| Khám phá Quy Nhơn (bài viết WP) | ✅ |
+| Xem bài viết trong app | ✅ |
+| Footer địa chỉ | ✅ |
+| Nút liên hệ nhanh nổi (FloatingContact) | ✅ |
+| Chỉ đường Google Maps | ✅ |
+| Deep link (`?hotelId=`, `?roomId=`, `?postId=`) | ✅ |
+| Chia sẻ khách sạn / phòng qua Zalo | ✅ |
+| OA Notifications + kết nối OA sau booking | ✅ |
+| Tích điểm loyalty (nativeStorage) | ✅ |
+| **BottomNav** (tab bar custom dưới đáy) | ✅ |
+| **BottomBar** (quay lại + CTA trang con) | ✅ |
+| Lazy load + Skeleton + Pull-to-refresh | ✅ |
+| WordPress plugin hoạt động (đã fix PHP errors) | ✅ |
