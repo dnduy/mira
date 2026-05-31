@@ -3,7 +3,6 @@ import { Box, Text } from "zmp-ui";
 import { handleCall, handleOpenChat } from "../utils/contact";
 
 const PHONE = "02563822222";
-const FB_PAGE = "https://m.me/mira.hotel.quynhon";
 
 // SVG icons
 const PhoneIcon = () => (
@@ -15,12 +14,6 @@ const PhoneIcon = () => (
 const ZaloIcon = () => (
   <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
     <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fontSize="22" fill="white" fontWeight="bold">Z</text>
-  </svg>
-);
-
-const MessengerIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-    <path d="M12 2C6.477 2 2 6.145 2 11.243c0 2.908 1.438 5.504 3.688 7.2V22l3.37-1.85A10.7 10.7 0 0012 20.486c5.523 0 10-4.144 10-9.243C22 6.145 17.523 2 12 2zm1.008 12.435l-2.545-2.714-4.97 2.714 5.467-5.804 2.608 2.714 4.908-2.714-5.468 5.804z"/>
   </svg>
 );
 
@@ -38,13 +31,6 @@ const buttons = [
     shadow: "rgba(59,130,246,0.45)",
     Icon: ZaloIcon,
     action: () => handleOpenChat(),
-  },
-  {
-    label: "Messenger",
-    gradient: "linear-gradient(135deg, #A855F7, #6D28D9)",
-    shadow: "rgba(168,85,247,0.45)",
-    Icon: MessengerIcon,
-    action: () => window.open(FB_PAGE),
   },
 ];
 
