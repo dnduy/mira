@@ -57,7 +57,7 @@ const HomePage = () => {
           <Text className="hero-title">
             Khám phá Quy Nhơn{"\n"}cùng Mira Hotel
           </Text>
-          <Text className="hero-sub">7 khách sạn · Cách biển ≤ 200m</Text>
+          <Text className="hero-sub">8 khách sạn · Cách biển & Hồ Sinh Thái</Text>
           {/* Badge điểm tích luỹ */}
           <Box style={{ marginTop: 10 }}>
             <LoyaltyBadge />
@@ -82,7 +82,7 @@ const HomePage = () => {
       {/* Quick Stats */}
       <Box className="stats-row">
         {[
-          { value: "7", label: "Khách sạn", color: "#C9A84C" },
+          { value: "8", label: "Khách sạn", color: "#C9A84C" },
           { value: "50m", label: "Gần biển nhất", color: "#1D7FA3" },
           { value: "3★", label: "Tiêu chuẩn", color: "#27ae60" },
         ].map((s) => (

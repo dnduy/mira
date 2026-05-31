@@ -18,37 +18,6 @@ export default {
     navigationBarTextStyle: "white",
     navigationBarTitleText: "Mira Quy Nhơn 🏖️",
   },
-  tabBar: {
-    custom: false,
-    backgroundColor: "#ffffff",
-    borderColor: "#e0e0e0",
-    selectedColor: "#C9A84C",
-    unselectedColor: "#7F8C8D",
-    list: [
-      {
-        pagePath: "pages/home/index",
-        text: "Trang chủ",
-        icon: "assets/icons/home.png",
-        selectedIcon: "assets/icons/home-active.png",
-      },
-      {
-        pagePath: "pages/hotels/index",
-        text: "Khách sạn",
-        icon: "assets/icons/hotel.png",
-        selectedIcon: "assets/icons/hotel-active.png",
-      },
-      {
-        pagePath: "pages/booking/index",
-        text: "Đặt phòng",
-        icon: "assets/icons/booking.png",
-        selectedIcon: "assets/icons/booking-active.png",
-      },
-      {
-        pagePath: "pages/explore/index",
-        text: "Khám phá",
-        icon: "assets/icons/explore.png",
-        selectedIcon: "assets/icons/explore-active.png",
-      },
-    ],
-  },
+  // tabBar mặc định Zalo đã tắt — dùng BottomNav custom (src/components/BottomNav.jsx)
+  // để tránh 2 thanh điều hướng chồng nhau.
 };

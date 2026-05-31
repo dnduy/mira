@@ -1,12 +1,14 @@
 import React, { useEffect, lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { App, ZMPRouter, Route, AnimationRoutes, SnackbarProvider, useNavigate } from "zmp-ui";
+import { useLocation } from "react-router-dom";
 import "zmp-ui/zaui.css";
 import FloatingContact from "./components/FloatingContact";
+import BottomNav from "./components/BottomNav";
 import { useAppStore } from "./services/store";
 import { retryPendingConnect } from "./utils/zaloConnect";
 
-// Suppress React Router v6 future flag warnings — ZMPRouter wraṕs BrowserRouter
+// Suppress React Router v6 future flag warnings — ZMPRouter wraps BrowserRouter
 // internally và không expose future prop, sẽ tự hết khi zmp-ui upgrade lên RR v7
 if (import.meta.env.DEV) {
   const _warn = console.warn;
@@ -24,6 +26,9 @@ const BookingPage     = lazy(() => import("./pages/booking"));
 const ExplorePage     = lazy(() => import("./pages/explore"));
 const PostDetailPage  = lazy(() => import("./pages/post-detail"));
 const RoomDetailPage  = lazy(() => import("./pages/room-detail"));
+
+// Các trang gốc hiển thị BottomNav
+const ROOT_PATHS = ["/", "/hotels", "/booking", "/explore"];
 
 // Fallback hiển thị trong khi chunk đang tải
 const PageLoader = () => (
@@ -48,7 +53,6 @@ const PageLoader = () => (
 
 /**
  * Xử lý deep link khi app được mở từ link chia sẻ.
- * Đọc query params ?hotelId=xxx&roomId=yyy và điều hướng đến đúng trang.
  */
 const DeepLinkHandler = () => {
   const navigate = useNavigate();
@@ -66,17 +70,21 @@ const DeepLinkHandler = () => {
     } else if (postId) {
       navigate(`/post/${postId}`);
     }
-    // Nếu không có params → ở lại trang chủ (mặc định)
   }, []);
 
   return null;
+};
+
+/** Chỉ hiển thị BottomNav khi đang ở trang gốc */
+const ConditionalBottomNav = () => {
+  const location = useLocation();
+  return ROOT_PATHS.includes(location.pathname) ? <BottomNav /> : null;
 };
 
 const MyApp = () => {
   const { initUser, loadPoints, loadUserConnection } = useAppStore();
 
   useEffect(() => {
-    // Lấy thông tin user Zalo, điểm tích luỹ và trạng thái kết nối OA khi app khởi động
     initUser();
     loadPoints();
     loadUserConnection();
@@ -99,6 +107,7 @@ const MyApp = () => {
               <Route path="/hotel/:hotelId/room/:roomId" element={<RoomDetailPage />} />
             </AnimationRoutes>
           </Suspense>
+          <ConditionalBottomNav />
         </ZMPRouter>
         <FloatingContact />
       </SnackbarProvider>

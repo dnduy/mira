@@ -11,6 +11,7 @@ const HOTELS = [
   { name: "Mira Quy Nhơn Hotel",  addr: "11A Ngô Mây, TP Quy Nhơn" },
   { name: "Mira Boutique Hotel",  addr: "20 Hàn Mặc Tử, TP Quy Nhơn" },
   { name: "Mira Grand Hotel",     addr: "7 Nguyễn Thị Định, TP Quy Nhơn" },
+  { name: "Mira Sun Hotel",       addr: "Khu Hồ Sinh Thái, TP Quy Nhơn" },
   { name: "Mira Bãi Xếp",        addr: "Bãi Xếp, Ghềnh Ráng, Quy Nhơn" },
   { name: "Mira Aloha Hotel",     addr: "50 Lê Lợi, TP Quy Nhơn" },
   { name: "Mira Eco Hotel",       addr: "24 Nguyễn Như Đỗ, TP Quy Nhơn" },

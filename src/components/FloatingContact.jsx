@@ -57,7 +57,7 @@ const FloatingContact = () => {
       <Box
         style={{
           position: "fixed",
-          bottom: 80,
+          bottom: 140,
           right: 16,
           zIndex: 9999,
           display: "flex",

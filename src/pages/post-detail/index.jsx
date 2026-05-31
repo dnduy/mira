@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Page, Box, Text } from "zmp-ui";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
-import BackBar from "../../components/BackBar";
+import BottomBar from "../../components/BottomBar";
 
 const PostDetailPage = () => {
   const { id } = useParams();
@@ -15,15 +15,12 @@ const PostDetailPage = () => {
 
   return (
     <Page>
-      <BackBar />
-
       {(postLoading || !currentPost || String(currentPost.id) !== String(id)) ? (
         <Box style={{ padding: 32, textAlign: "center" }}>
           <Text style={{ color: "#7F8C8D", fontSize: 14 }}>Đang tải bài viết...</Text>
         </Box>
       ) : (
         <>
-          {/* Featured image */}
           {currentPost.thumbnail && (
             <img
               src={currentPost.thumbnail}
@@ -32,8 +29,8 @@ const PostDetailPage = () => {
             />
           )}
 
-          <Box style={{ padding: "16px 16px 40px" }}>
-            {/* Category badge */}
+          {/* paddingBottom 90 để chừa chỗ cho BottomBar */}
+          <Box style={{ padding: "16px 16px 90px" }}>
             {currentPost.category && (
               <span
                 style={{
@@ -51,7 +48,6 @@ const PostDetailPage = () => {
               </span>
             )}
 
-            {/* Title */}
             <Text
               style={{
                 fontSize: 20,
@@ -65,29 +61,23 @@ const PostDetailPage = () => {
               {currentPost.title}
             </Text>
 
-            {/* Date */}
             {currentPost.date && (
               <Text style={{ fontSize: 11, color: "#7F8C8D", marginBottom: 16, display: "block" }}>
                 {new Date(currentPost.date).toLocaleDateString("vi-VN", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
+                  day: "2-digit", month: "2-digit", year: "numeric",
                 })}
               </Text>
             )}
 
-            {/* Content – rendered from WP HTML (trusted source) */}
             <Box
-              style={{
-                fontSize: 14,
-                color: "#2C3E50",
-                lineHeight: 1.8,
-              }}
+              style={{ fontSize: 14, color: "#2C3E50", lineHeight: 1.8 }}
               dangerouslySetInnerHTML={{ __html: currentPost.content }}
             />
           </Box>
         </>
       )}
+
+      <BottomBar to="/explore" />
     </Page>
   );
 };

@@ -282,7 +282,7 @@ if ( ! wp_next_scheduled('mira_refresh_zalo_token') ) {
 | Mira Aloha | `maps.google.com/?q=50+Le+Loi,+Quy+Nhon` |
 | Mira Eco | `maps.google.com/?q=24+Nguyen+Nhu+Do,+Quy+Nhon` |
 | Xavia Hotel | `maps.google.com/?q=24-25+Bui+Tu+Toan,+Quy+Nhon` |
-
+|Khách sạn Mira Sun|  `maps.google.com/?q=Khách+sạn+Mira+Sun+-+Khách+sạn+3+sao+cạnh+Hồ+Sinh+Thái,+Quy+Nhon`| 
 ---
 
 ### Tổng kết trạng thái hiện tại

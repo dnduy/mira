@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
-import { Page, Box, Text, Button } from "zmp-ui";
+import { Page, Box, Text } from "zmp-ui";
 import { useParams, useNavigate as useRouterNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import { HotelDetailSkeleton } from "../../components/LoadingSkeleton";
 import { handleShareHotel } from "../../utils/share";
-import BackBar from "../../components/BackBar";
+import BottomBar from "../../components/BottomBar";
 
 const AMENITIES = [
   "📶 Wifi miễn phí",
@@ -42,19 +42,17 @@ const HotelDetailPage = () => {
 
   return (
     <Page>
-      <BackBar />
       {/* Hero Photo */}
       <Box style={{ position: "relative", height: 240, overflow: "hidden" }}>
         {currentHotel.thumbnail ? (
           <img
             src={currentHotel.thumbnail}
-            alt={currentHotel.name}
+            alt={`${currentHotel.name} – ${currentHotel.dist} Quy Nhơn`}
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         ) : (
           <Box style={{ width: "100%", height: "100%", background: "linear-gradient(165deg, #1A2535 0%, #1D4E6B 60%, #1D7FA3 100%)" }} />
         )}
-        {/* Gradient overlay */}
         <Box
           style={{
             position: "absolute",
@@ -149,7 +147,7 @@ const HotelDetailPage = () => {
             <img
               key={i}
               src={img}
-              alt=""
+              alt={`${currentHotel.name} ảnh ${i + 2}`}
               style={{
                 width: 100,
                 height: 70,
@@ -163,7 +161,8 @@ const HotelDetailPage = () => {
         </Box>
       )}
 
-      <Box style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* paddingBottom 96 để không bị BottomBar che */}
+      <Box style={{ padding: "16px 16px 96px", display: "flex", flexDirection: "column", gap: 12 }}>
         {/* Mô tả */}
         <Box className="info-card">
           <Text className="card-title">Giới thiệu</Text>
@@ -189,18 +188,9 @@ const HotelDetailPage = () => {
         {/* Tiện ích */}
         <Box className="info-card">
           <Text className="card-title">Tiện ích nổi bật</Text>
-          <Box
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 8,
-              marginTop: 8,
-            }}
-          >
+          <Box style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
             {AMENITIES.map((a) => (
-              <Text key={a} style={{ fontSize: 12, color: "#7F8C8D" }}>
-                {a}
-              </Text>
+              <Text key={a} style={{ fontSize: 12, color: "#7F8C8D" }}>{a}</Text>
             ))}
           </Box>
         </Box>
@@ -244,15 +234,7 @@ const HotelDetailPage = () => {
                       <Text style={{ color: "#7F8C8D", fontSize: 10 }}>/đêm</Text>
                     </Box>
                   </Box>
-                  <Box
-                    style={{
-                      padding: "0 12px 0 0",
-                      display: "flex",
-                      alignItems: "center",
-                      color: "#C9A84C",
-                      fontSize: 18,
-                    }}
-                  >
+                  <Box style={{ padding: "0 12px 0 0", display: "flex", alignItems: "center", color: "#C9A84C", fontSize: 18 }}>
                     ›
                   </Box>
                 </Box>
@@ -260,46 +242,30 @@ const HotelDetailPage = () => {
             </Box>
           </Box>
         )}
+      </Box>
 
-        {/* CTA */}
-        <Box style={{ display: "flex", gap: 10 }}>
-          <Button
-            style={{
-              flex: 1,
-              background: "#C9A84C",
-              color: "#1A2535",
-              borderRadius: 12,
-              fontWeight: 700,
-              fontSize: 15,
-              height: 48,
-            }}
-            onClick={handleBooking}
-          >
-            Đặt phòng ngay
-          </Button>
-          {/* Nút chia sẻ khách sạn đến bạn bè Zalo */}
-          <Button
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: "#EFF6FF",
-              border: "1px solid #BFDBFE",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              padding: 0,
-            }}
+      {/* Thanh điều khiển dưới đáy: Quay lại + Đặt phòng + Chia sẻ */}
+      <BottomBar
+        to="/hotels"
+        actionLabel="Đặt phòng ngay"
+        onAction={handleBooking}
+        action={
+          <button
             onClick={() => handleShareHotel(currentHotel)}
+            aria-label="Chia sẻ"
+            style={{
+              width: 48, height: 48, borderRadius: 14, background: "#EFF6FF",
+              border: "1px solid #BFDBFE", display: "flex", alignItems: "center",
+              justifyContent: "center", flexShrink: 0, padding: 0, cursor: "pointer",
+            }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM18 22a3 3 0 100-6 3 3 0 000 6z" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-          </Button>
-        </Box>
-      </Box>
+          </button>
+        }
+      />
     </Page>
   );
 };

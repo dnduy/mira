@@ -44,29 +44,7 @@ class Mira_Booking_API {
             'callback'            => fn() => new WP_REST_Response(['status' => 'ok'], 200),
             'permission_callback' => '__return_true',
         ]);
-
-        // Lưu thông tin user kết nối OA (lưu lần đầu) hoặc cập nhật (nếu đã tồn tại)
-        register_rest_route( 'mira/v1', '/user-connect', [
-            'methods'             => 'POST',
-            'callback'            => [ $this, 'handle_user_connect' ],
-            'permission_callback' => '__return_true',
-            'args'                => [
-                'zaloUserId'  => [ 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ],
-                'displayName' => [ 'required' => false, 'default' => '',   'sanitize_callback' => 'sanitize_text_field' ],
-                'avatar'      => [ 'required' => false, 'default' => '',   'sanitize_callback' => 'esc_url_raw' ],
-                'phoneToken'  => [ 'required' => false, 'default' => '',   'sanitize_callback' => 'sanitize_text_field' ],
-            ],
-        ]);
-
-        // Kiểm tra trạng thái kết nối của một user
-        register_rest_route( 'mira/v1', '/user-connect/(?P<zaloUserId>[\w\-]+)', [
-            'methods'             => 'GET',
-            'callback'            => [ $this, 'handle_get_user' ],
-            'permission_callback' => '__return_true',
-            'args'                => [
-                'zaloUserId' => [ 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ],
-            ],
-        ]);
+        // /user-connect routes được đăng ký bởi class Mira_User_Connect ở cuối file
     }
 
     private function get_booking_args() {
@@ -86,7 +64,7 @@ class Mira_Booking_API {
         ];
     }
 
-    public function handle_booking( WP_REST_Request $request ) {( WP_REST_Request $request ) {
+    public function handle_booking( WP_REST_Request $request ) {
         $data = $request->get_params();
 
         // Validate ngày

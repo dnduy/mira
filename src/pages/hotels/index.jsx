@@ -4,9 +4,21 @@ import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
 import HotelCard from "../../components/HotelCard";
 import LoadingSkeleton from "../../components/LoadingSkeleton";
-import BackBar from "../../components/BackBar";
 
-const FILTERS = ["Tất cả", "Gần biển nhất", "3 Sao", "Homestay", "Giá tốt"];
+const FILTERS = ["Tất cả", "Gần biển", "View Hồ", "3 Sao", "Homestay", "Giá tốt"];
+
+// Lọc theo thuộc tính thật thay vì so khớp h.tag (tag không trùng FILTERS)
+function applyFilter(hotels, filter) {
+  switch (filter) {
+    case "Tất cả":   return hotels;
+    case "Gần biển": return hotels.filter((h) => /biển|m tới biển|mép biển/i.test(h.dist || ""));
+    case "View Hồ":  return hotels.filter((h) => /hồ/i.test(h.dist || "") || /hồ/i.test(h.excerpt || ""));
+    case "3 Sao":    return hotels.filter((h) => (h.stars || 0) >= 3);
+    case "Homestay": return hotels.filter((h) => /homestay/i.test(h.tag || ""));
+    case "Giá tốt":  return [...hotels].sort((a, b) => (a.priceFrom || 0) - (b.priceFrom || 0));
+    default:         return hotels;
+  }
+}
 
 const HotelsPage = () => {
   const navigate = useNavigate();
@@ -19,11 +31,7 @@ const HotelsPage = () => {
 
   // Pull-to-refresh thủ công bằng touch events
   const touchStartY = useRef(0);
-
-  const handleTouchStart = (e) => {
-    touchStartY.current = e.touches[0].clientY;
-  };
-
+  const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
   const handleTouchEnd = useCallback(async (e) => {
     const deltaY = e.changedTouches[0].clientY - touchStartY.current;
     if (deltaY > 80 && window.scrollY === 0 && !hotelsLoading) {
@@ -31,15 +39,11 @@ const HotelsPage = () => {
     }
   }, [fetchHotels, hotelsLoading]);
 
-  const filtered =
-    activeFilter === "Tất cả"
-      ? hotels
-      : hotels.filter((h) => h.tag === activeFilter);
+  const filtered = applyFilter(hotels, activeFilter);
 
   return (
     <Page onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-      <BackBar title="7 Khách sạn Mira" to="/" />
-      {/* Header */}}
+      {/* Header */}
       <Box
         style={{
           background: "linear-gradient(135deg, #1A2535, #1D4E6B)",
@@ -50,10 +54,10 @@ const HotelsPage = () => {
           Hệ thống
         </Text>
         <Text style={{ color: "#fff", fontSize: 20, fontWeight: 700, marginBottom: 4 }}>
-          7 Khách sạn Mira
+          8 Khách sạn Mira
         </Text>
         <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
-          Tất cả cách biển ≤ 200m · Quy Nhơn
+          Gần biển & view Hồ Sinh Thái · Quy Nhơn
         </Text>
       </Box>
 
@@ -89,34 +93,20 @@ const HotelsPage = () => {
         ))}
       </Box>
 
-      {/* List */}
-      <Box style={{ padding: "12px 16px" }}>
+      {/* List — paddingBottom 80 chừa cho BottomNav */}
+      <Box style={{ padding: "12px 16px 80px" }}>
         {hotelsLoading && <LoadingSkeleton count={4} />}
 
         {hotelsError && (
-          <Box
-            style={{
-              background: "#fff3f3",
-              border: "1px solid #f5c6c6",
-              borderRadius: 10,
-              padding: 16,
-              textAlign: "center",
-            }}
-          >
-            <Text style={{ color: "#c0392b", marginBottom: 8 }}>
-              Không tải được dữ liệu.
-            </Text>
-            <Button size="small" onClick={fetchHotels}>
-              Thử lại
-            </Button>
+          <Box style={{ background: "#fff3f3", border: "1px solid #f5c6c6", borderRadius: 10, padding: 16, textAlign: "center" }}>
+            <Text style={{ color: "#c0392b", marginBottom: 8 }}>Không tải được dữ liệu.</Text>
+            <Button size="small" onClick={fetchHotels}>Thử lại</Button>
           </Box>
         )}
 
         {!hotelsLoading && filtered.length === 0 && !hotelsError && (
           <Box style={{ textAlign: "center", padding: "32px 0" }}>
-            <Text style={{ color: "#7F8C8D", fontSize: 14 }}>
-              Không có khách sạn phù hợp.
-            </Text>
+            <Text style={{ color: "#7F8C8D", fontSize: 14 }}>Không có khách sạn phù hợp.</Text>
           </Box>
         )}
 

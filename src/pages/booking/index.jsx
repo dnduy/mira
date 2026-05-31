@@ -15,6 +15,7 @@ const HOTEL_OPTIONS = [
   { value: "mira-quy-nhon",  label: "Mira Hotel Quy Nhơn (100m biển)" },
   { value: "mira-boutique",  label: "Mira Boutique Hotel" },
   { value: "mira-grand",     label: "Mira Grand" },
+  { value: "mira-sun",       label: "Mira Sun (cạnh Hồ Sinh Thái)" },
   { value: "mira-bai-xep",   label: "Mira Bãi Xếp (Homestay)" },
   { value: "mira-aloha",     label: "Mira Aloha" },
   { value: "mira-eco",       label: "Mira Eco (50m biển)" },
