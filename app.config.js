@@ -1,8 +1,9 @@
 export default {
   app: {
-    title: "Mira Quy Nhơn - Khách sạn 5 sao biển, Đặt phòng nhanh",
+    title: "Mira Quy Nhơn — Hệ thống khách sạn biển, đặt phòng nhanh",
     description:
-      "Đặt phòng khách sạn Mira Quy Nhơn 5 sao view biển trực tiếp trên Zalo. Giá tốt nhất, ưu đãi flash sale, hồ bơi vô cực, nhà hàng hải sản tươi sống. Hỗ trợ Zalo Pay, nhận phòng nhanh, hoàn tiền dễ dàng. Khách sạn biển Quy Nhơn đẹp nhất.",
+      "Đặt phòng 8 khách sạn Mira Quy Nhơn ngay trên Zalo: gần biển & view Hồ Sinh Thái. " +
+      "Giá tốt, xác nhận nhanh, không thu phí đặt cọc, hỗ trợ chỉ đường & chat OA.",
     icon: "https://miraquynhon.com/wp-content/uploads/2024/10/logo.png",
   },
   pages: [

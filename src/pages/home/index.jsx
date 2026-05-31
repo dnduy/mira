@@ -35,7 +35,12 @@ const HomePage = () => {
   }, [fetchHotels, hotelsLoading]);
 
   return (
-    <Page className="home-page" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <Page
+      className="home-page"
+      style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Hero Banner */}
       <Box style={{ position: "relative", overflow: "hidden" }}>
         <img

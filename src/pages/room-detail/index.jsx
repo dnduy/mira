@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Page, Box, Text, Button } from "zmp-ui";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppStore } from "../../services/store";
@@ -8,10 +8,27 @@ import BottomBar from "../../components/BottomBar";
 const RoomDetailPage = () => {
   const { hotelId, roomId } = useParams();
   const navigate = useNavigate();
-  const { hotels, setBookingField } = useAppStore();
+  const { hotels, hotelsLoading, fetchHotels, setBookingField } = useAppStore();
+
+  // Nếu vào thẳng qua deep link mà store chưa có data → tải
+  useEffect(() => {
+    if (hotels.length === 0) fetchHotels();
+  }, []);
 
   const hotel = hotels.find((h) => String(h.id) === String(hotelId));
   const room = hotel?.rooms?.find((r) => r.id === roomId);
+
+  // Đang tải data → hiện loading thay vì "not found"
+  if (hotelsLoading || hotels.length === 0) {
+    return (
+      <Page>
+        <Box style={{ padding: 32, textAlign: "center" }}>
+          <Text style={{ color: "#7F8C8D", fontSize: 14 }}>Đang tải thông tin phòng...</Text>
+        </Box>
+        <BottomBar to={`/hotel/${hotelId}`} />
+      </Page>
+    );
+  }
 
   if (!hotel || !room) {
     return (

@@ -71,7 +71,7 @@ const ExplorePage = () => {
   const categories = [...new Set(displayPosts.map((p) => p.category || "Khám phá"))];
 
   return (
-    <Page>
+    <Page style={{ paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}>
       <BackBar title="Khám phá Quy Nhơn" to="/" />
       {/* Header */}
       <Box

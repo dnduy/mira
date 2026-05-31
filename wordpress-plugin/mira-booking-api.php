@@ -76,7 +76,7 @@ class Mira_Booking_API {
         }
 
         // Validate SĐT Việt Nam
-        if ( ! preg_match('/^(0|\+84)\d{9}$/', $data['phone']) ) {
+        if ( ! preg_match('/^(0\d{9}|\+84\d{9})$/', $data['phone']) ) {
             return new WP_REST_Response([
                 'success' => false,
                 'message' => 'Số điện thoại không hợp lệ.',
@@ -156,7 +156,7 @@ class Mira_Booking_API {
       " . ($data['note'] ? "<tr><td style='padding: 8px; background: #f0f0f0; font-weight: bold;'>Ghi chú</td><td style='padding: 8px;'>{$data['note']}</td></tr>" : "") . "
     </table>
 
-    <p style='color: #666; font-size: 13px;'>Cần hỗ trợ gấp: <strong>0256 XXX XXXX</strong> hoặc chat Zalo OA <strong>Mira Quy Nhon</strong></p>
+    <p style='color: #666; font-size: 13px;'>Cần hỗ trợ gấp: <strong>02563822222</strong> hoặc chat Zalo OA <strong>Mira Quy Nhon</strong></p>
   </div>
   <div style='background: #1A2535; padding: 16px; text-align: center;'>
     <p style='color: rgba(255,255,255,0.5); font-size: 12px; margin: 0;'>miraquynhon.com · Quy Nhơn, Bình Định</p>
@@ -222,7 +222,7 @@ Thời gian : " . current_time('d/m/Y H:i') . "
                         . "📅 {$data['checkIn']} → {$data['checkOut']} ({$nights} đêm)\n"
                         . "👥 {$data['adults']} người lớn\n\n"
                         . "Nhân viên sẽ gọi xác nhận trong 30 phút.\n"
-                        . "☎️ Hotline: 0256 XXX XXXX",
+                        . "☔️ Hotline: 02563822222",
             ],
         ];
 

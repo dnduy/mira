@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import { Page, Box, Text, Button, Input, Select, Picker, useSnackbar } from "zmp-ui";
+import React, { useState, useEffect } from "react";
+import { Page, Box, Text, Button, Input, Select, useSnackbar } from "zmp-ui";
 import { handleCall, handleOpenChat } from "../../utils/contact";
-import { askOAInteract, askNotificationPermission } from "../../utils/notification";
 import ConnectOAModal from "../../components/ConnectOAModal";
 import { connectUserToOA } from "../../utils/zaloConnect";
 import BackBar from "../../components/BackBar";
@@ -25,7 +24,7 @@ const HOTEL_OPTIONS = [
 const BookingPage = () => {
   const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
-  const { bookingForm, setBookingField, resetBookingForm, user, addPoints,
+  const { bookingForm, setBookingField, resetBookingForm, user, addPoints, hotels,
           shouldShowConnectModal, setUserConnected, incrementSkipCount } = useAppStore();
   const [loading, setLoading] = useState(false);
   const [showReview, setShowReview] = useState(false);
@@ -33,6 +32,18 @@ const BookingPage = () => {
 
   const today = dayjs().format("YYYY-MM-DD");
   const tomorrow = dayjs().add(1, "day").format("YYYY-MM-DD");
+
+  // Khởi tạo ngày mặc định vào store ngay khi mount
+  useEffect(() => {
+    if (!bookingForm.checkIn)  setBookingField("checkIn", today);
+    if (!bookingForm.checkOut) setBookingField("checkOut", tomorrow);
+  }, []);
+
+  const nights = bookingForm.checkIn && bookingForm.checkOut
+    ? Math.max(1, dayjs(bookingForm.checkOut).diff(dayjs(bookingForm.checkIn), "day"))
+    : 1;
+  const selectedHotel = hotels.find((h) => h.slug === bookingForm.hotelId);
+  const priceEstimate = selectedHotel ? selectedHotel.priceFrom * nights : 0;
 
   const validate = () => {
     if (!bookingForm.hotelId) {
@@ -47,7 +58,7 @@ const BookingPage = () => {
       openSnackbar({ text: "Vui lòng nhập họ tên", type: "error" });
       return false;
     }
-    if (!bookingForm.phone.trim() || !/^(0|\+84)\d{9}$/.test(bookingForm.phone)) {
+    if (!bookingForm.phone.trim() || !/^(0\d{9}|\+84\d{9})$/.test(bookingForm.phone.trim())) {
       openSnackbar({ text: "Số điện thoại không hợp lệ", type: "error" });
       return false;
     }
@@ -84,7 +95,7 @@ const BookingPage = () => {
       }, 1000);
     } catch (err) {
       openSnackbar({
-        text: "Lỗi gửi đặt phòng. Vui lòng gọi trực tiếp 0256 XXX XXXX",
+        text: "Lỗi gửi đặt phòng. Vui lòng gọi trực tiếp 02563822222",
         type: "error",
         duration: 5000,
       });
@@ -137,7 +148,7 @@ const BookingPage = () => {
         </Text>
       </Box>
 
-      <Box style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+      <Box style={{ padding: "16px 16px calc(80px + env(safe-area-inset-bottom, 0px))", display: "flex", flexDirection: "column", gap: 14 }}>
 
         {/* Chọn khách sạn */}
         <Box className="form-group">
@@ -240,6 +251,27 @@ const BookingPage = () => {
           </Text>
         </Box>
 
+        {/* Giá tạm tính */}
+        {priceEstimate > 0 && (
+          <Box
+            style={{
+              background: "#f8f4ea",
+              border: "1px solid #e8d9a0",
+              borderRadius: 10,
+              padding: "10px 14px",
+              marginBottom: 8,
+            }}
+          >
+            <Text style={{ fontSize: 12, color: "#888" }}>
+              {selectedHotel?.name} · {nights} đêm
+            </Text>
+            <Text style={{ fontSize: 14, fontWeight: 700, color: "#C9A84C" }}>
+              Giá tạm tính từ{" "}
+              {priceEstimate.toLocaleString("vi-VN")}₫
+            </Text>
+          </Box>
+        )}
+
         {/* Submit */}
         <Button
           loading={loading}
@@ -257,13 +289,11 @@ const BookingPage = () => {
         >
           {loading ? "Đang gửi..." : "Gửi yêu cầu đặt phòng"}
         </Button>
-
-        {/* Liên hệ trực tiếp */}
         <Box style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <Button
             variant="secondary"
             style={{ borderRadius: 12, height: 44, fontSize: 13 }}
-            onClick={() => handleCall("02563821234")}
+            onClick={() => handleCall("02563822222")}
           >
             📞 Gọi trực tiếp
           </Button>
